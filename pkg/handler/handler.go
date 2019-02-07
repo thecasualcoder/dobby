@@ -3,6 +3,7 @@ package handler
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/thecasualcoder/dobby/pkg/config"
+	"log"
 	"os"
 	"strconv"
 )
@@ -22,6 +23,11 @@ func Version(c *gin.Context) {
 		version = envVersion
 	}
 	c.JSON(200, gin.H{"version": version})
+}
+
+// Crash will make dobby to kill itself
+func Crash(_ *gin.Context) {
+	log.Fatal("you asked me do so, killing myself :-)")
 }
 
 func init() {
