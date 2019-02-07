@@ -11,5 +11,6 @@ func Run(bindAddress, port string) error {
 	r := gin.Default()
 
 	r.GET("/health", handler.Health)
+	r.GET("/version", handler.Version)
 	return r.Run(fmt.Sprintf("%s:%s", bindAddress, port))
 }

@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"github.com/thecasualcoder/dobby/pkg/config"
 	"github.com/urfave/cli"
 	"log"
 )
@@ -17,7 +18,7 @@ func Run(args []string) error {
 	app.Description = "Web app which obey's invokers action"
 	app.Usage = "Waiting to serve the order"
 	app.Name = "dobby"
-	app.Version = BuildVersion()
+	app.Version = config.BuildVersion()
 
 	app.Commands = []cli.Command{
 		serverCmd(),
