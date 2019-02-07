@@ -12,7 +12,11 @@ var statusCode = 200
 
 // Health return the dobby health status
 func Health(c *gin.Context) {
-	c.JSON(statusCode, gin.H{"healthy": true})
+	healthy := true
+	if statusCode != 200 {
+		healthy = false
+	}
+	c.JSON(statusCode, gin.H{"healthy": healthy})
 }
 
 // Version return dobby version
@@ -28,6 +32,18 @@ func Version(c *gin.Context) {
 // Crash will make dobby to kill itself
 func Crash(_ *gin.Context) {
 	log.Fatal("you asked me do so, killing myself :-)")
+}
+
+// Sick will make dobby sick
+func Sick(c *gin.Context) {
+	statusCode = 500
+	c.JSON(200, gin.H{"status": "success"})
+}
+
+// Healthy will make dobby healthy again
+func Healthy(c *gin.Context) {
+	statusCode = 200
+	c.JSON(200, gin.H{"status": "success"})
 }
 
 func init() {

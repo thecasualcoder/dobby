@@ -13,5 +13,7 @@ func Run(bindAddress, port string) error {
 	r.GET("/health", handler.Health)
 	r.GET("/version", handler.Version)
 	r.PUT("/state/crash", handler.Crash)
+	r.PUT("/state/sick", handler.Sick)
+	r.PUT("/state/healthy", handler.Healthy)
 	return r.Run(fmt.Sprintf("%s:%s", bindAddress, port))
 }
