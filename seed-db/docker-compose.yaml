@@ -1,0 +1,11 @@
+version: '3'
+services:
+  db:
+    image: postgres:alpine
+  seed-db:
+    build:
+      context: .
+      dockerfile: psql.Dockerfile
+    environment:
+      - PGPASSWORD=postgres
+    command: dockerize -timeout 20s -wait tcp://db:5432 psql -h db -U postgres -d postgres -f data.sql
