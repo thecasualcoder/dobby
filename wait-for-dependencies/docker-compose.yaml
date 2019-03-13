@@ -1,0 +1,9 @@
+version: '3'
+services:
+  db:
+    image: postgres:alpine
+  app:
+    build:
+      context: .
+      dockerfile: app.Dockerfile
+    command: dockerize -timeout 20s -wait tcp://db:5432 dobby server
