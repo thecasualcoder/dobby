@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+
+set -e
+
+echo "Performing app post boot-up actions"
+wget https://api.github.com/users/arunvelsriram -O arunvelsriram.json
+wget https://api.github.com/users/dineshba -O dineshba.json
+echo "Done"
+

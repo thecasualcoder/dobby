@@ -1,0 +1,9 @@
+version: '3'
+services:
+  app:
+    image: thecasualcoder/dobby
+  post-boot-actions:
+    build:
+      context: .
+      dockerfile: post-boot-actions.Dockerfile
+    command: dockerize -timeout 20s -wait http://app:4444/health post-boot-actions
