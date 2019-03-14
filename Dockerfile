@@ -6,4 +6,5 @@ RUN make build-deps compile
 
 FROM ubuntu:bionic
 COPY --from=builder /go/src/github.com/thecasualcoder/dobby/out/dobby /usr/local/bin/
-CMD ["dobby", "server"]
+EXPOSE 4444
+CMD ["dobby", "server", "--bind-address", "0.0.0.0"]
