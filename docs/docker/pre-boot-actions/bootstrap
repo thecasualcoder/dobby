@@ -7,5 +7,5 @@ wget https://api.github.com/users/arunvelsriram -O arunvelsriram.json
 wget https://api.github.com/users/dineshba -O dineshba.json
 echo "Done"
 
+# take all the arguments and execs them as a command
 exec "$@"
-
