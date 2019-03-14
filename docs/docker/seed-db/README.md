@@ -1,6 +1,6 @@
 # seed-db
 
-Scenario: Seed data after the Database is up.
+**Scenario:** Seed data after the Database is up.
 
 ## Approach
 

@@ -1,6 +1,6 @@
 # wait-for-dependencies
 
-Scenario: Wait for all the dependencies to be up before starting the application.
+**Scenario:** Wait for all the dependencies to be up before starting the application.
 
 ## Approach
 
