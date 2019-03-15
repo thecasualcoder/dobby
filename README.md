@@ -2,11 +2,43 @@
 
 ![Dobby GIF](dobby.gif)
 
-## Docs
+dobby is **free** and will serve your orders.
+
+You can start dobby using:
+```
+dobby server
+```
+which will start dobby server in port `4444`.
+
+You can ask dobby's
+
+- health `curl dobby:4444/health`
+- version `curl dobby:4444/version`
+
+You can order dobby to
+
+- be healthy
+    
+    `PUT /state/healthy` which will make `/health` to return 200
+- fall sick
+
+    `PUT /state/sick` which will make `/health` to return 500
+- kill itself
+
+    `PUT /state/crash` which will crash the server
+
+## Run
 
 ### Docker
 
-- [Wait for all the dependencies to be up before starting the application](docs/docker/wait-for-dependencies)
-- [Seed data after the Database is up](docs/docker/seed-db)
-- [Fetch configuration before starting the application/containe](docs/docker/post-boot-actions)
-- [Fetch configuration after starting the application](docs/docker/pre-boot-actions)
+```
+docker run thecasualcoder/dobby
+```
+
+### Local
+
+```
+git clone https://github.com/thecasualcoder/dobby.git && cd dobby
+make compile
+./out/dobby server
+```
