@@ -60,10 +60,18 @@ Available configurations:
 docker run thecasualcoder/dobby
 ```
 
-### Local
+### Run in local
 
 ```
 git clone https://github.com/thecasualcoder/dobby.git && cd dobby
 make compile
 ./out/dobby server
 ```
+
+### Contributing
+
+Fork the repo and start contributing
+
+#### Guidelines
+- Make sure to run build before raising PR (make build)
+- Update README.md if necessary
