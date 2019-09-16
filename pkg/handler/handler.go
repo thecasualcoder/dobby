@@ -33,8 +33,8 @@ func Ready(c *gin.Context) {
 	c.JSON(statusCode, gin.H{"ready": isReady})
 }
 
-// Meta return dobby metadata
-func Meta(c *gin.Context) {
+// Version return dobby version
+func Version(c *gin.Context) {
 	if !isReady {
 		c.JSON(http.StatusServiceUnavailable, gin.H{"error": "application is not ready"})
 		return
@@ -49,8 +49,25 @@ func Meta(c *gin.Context) {
 	if envVersion != "" {
 		version = envVersion
 	}
+	c.JSON(200, gin.H{"version": version})
+}
 
-	c.JSON(200, gin.H{"IP": utils.GetOutboundIP(), "HostName": os.Getenv("HOSTNAME"), "version": version})
+// Meta return dobby's metadata
+func Meta(c *gin.Context) {
+	if !isReady {
+		c.JSON(http.StatusServiceUnavailable, gin.H{"error": "application is not ready"})
+		return
+	}
+	if !isHealthy {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "application is not healthy"})
+		return
+	}
+	ip, err := utils.GetOutboundIP()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"IP": ip, "HostName": os.Getenv("HOSTNAME")})
 }
 
 // MakeHealthPerfect will make dobby's health perfect

@@ -1,18 +1,21 @@
 package utils
 
 import (
-	"log"
+	"fmt"
 	"net"
 )
 
-func GetOutboundIP() string {
+// GetOutboundIP will return a single IP of the host through which outbound traffic to internet is sent
+func GetOutboundIP() (string, error) {
 	conn, err := net.Dial("udp", "8.8.8.8:53")
 	if err != nil {
-		log.Fatal(err)
+		return "", fmt.Errorf("error when resolving outbound IP: %s", err)
 	}
-	defer conn.Close()
+	defer func() {
+		_ = conn.Close()
+	}()
 
 	localAddr := conn.LocalAddr().(*net.UDPAddr)
 
-	return localAddr.IP.String()
+	return localAddr.IP.String(), nil
 }

@@ -17,6 +17,7 @@ You can ask dobby's
 - health `curl dobby:4444/health`
 - readiness `curl dobby:4444/readiness`
 - version `curl dobby:4444/version`
+- meta `curl dobby:4444/meta`
 
 You can order dobby to
 
