@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"github.com/thecasualcoder/dobby/pkg"
+	"github.com/thecasualcoder/dobby/pkg/server"
 	"github.com/urfave/cli"
 )
 
@@ -35,6 +35,6 @@ func serverFlags() []cli.Flag {
 func runServer(context *cli.Context) {
 	bindAddress := context.String("bind-address")
 	port := context.String("port")
-	err := pkg.Run(bindAddress, port)
+	err := server.Run(bindAddress, port)
 	dieIf(err)
 }

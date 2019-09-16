@@ -1,4 +1,4 @@
-package pkg
+package server
 
 import (
 	"fmt"
@@ -16,13 +16,18 @@ func Run(bindAddress, port string) error {
 		Handler: r,
 	}
 
-	{
-		r.GET("/health", handler.Health)
-		r.GET("/readiness", handler.Ready)
-		r.GET("/version", handler.Version)
-	}
+	Bind(r, server)
+	return server.ListenAndServe()
+}
 
-	controlGroup := r.Group("/control")
+// Bind binds all the routes to gin engine
+func Bind(root *gin.Engine, server *http.Server) {
+	{
+		root.GET("/health", handler.Health)
+		root.GET("/readiness", handler.Ready)
+		root.GET("/version", handler.Version)
+	}
+	controlGroup := root.Group("/control")
 	{
 		controlGroup.PUT("/health/perfect", handler.MakeHealthPerfect)
 		controlGroup.PUT("/health/sick", handler.MakeHealthSick)
@@ -36,6 +41,4 @@ func Run(bindAddress, port string) error {
 			log.Fatal("you asked me do so, killing myself :-)")
 		})
 	}
-
-	return server.ListenAndServe()
 }
