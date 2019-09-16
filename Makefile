@@ -6,7 +6,6 @@ APP=dobby
 SRC_PACKAGES=$(shell go list ./... | grep -v "vendor")
 VERSION?=1.0
 BUILD?=$(shell git describe --always --dirty 2> /dev/null)
-DEP:=$(shell command -v dep 2> /dev/null)
 GOLINT:=$(shell command -v golint 2> /dev/null)
 APP_EXECUTABLE="./out/$(APP)"
 RICHGO=$(shell command -v richgo 2> /dev/null)
@@ -39,7 +38,10 @@ ensure-build-dir:
 	mkdir -p out
 
 build-deps: ## Install dependencies
-	dep ensure -v
+	go mod tidy
+
+update-deps: ## Update dependencies
+	go get -u
 
 compile: ensure-build-dir ## Compile dobby
 	$(GO_BINARY) build -ldflags "-X main.majorVersion=$(VERSION) -X main.minorVersion=${BUILD}" -o $(APP_EXECUTABLE) ./main.go
@@ -67,9 +69,6 @@ ifeq ($(GOMETA_LINT),)
 endif
 
 setup: setup-golangci-lint ensure-build-dir ## Setup environment
-ifeq ($(DEP),)
-	curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
-endif
 ifeq ($(GOLINT),)
 	$(GO_BINARY) get -u golang.org/x/lint/golint
 endif
