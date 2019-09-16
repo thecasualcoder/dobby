@@ -19,10 +19,12 @@ You can order dobby to
 
 - be healthy
     
-    `PUT /state/healthy` which will make `/health` to return 200
+    `PUT /control/health/perfect` which will make `/health` to return 200
+
 - fall sick
 
-    `PUT /state/sick` which will make `/health` to return 500
+    `PUT /control/health/sick` which will make `/health` to return 500
+
 - kill itself
 
     `PUT /state/crash` which will crash the server

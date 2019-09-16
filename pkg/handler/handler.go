@@ -3,24 +3,31 @@ package handler
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/thecasualcoder/dobby/pkg/config"
-	"log"
+	"net/http"
 	"os"
 	"strconv"
 )
 
-var statusCode = 200
+var (
+	isHealthy = true
+)
 
 // Health return the dobby health status
 func Health(c *gin.Context) {
-	healthy := true
-	if statusCode != 200 {
-		healthy = false
+	statusCode := http.StatusOK
+	if !isHealthy {
+		statusCode = http.StatusInternalServerError
 	}
-	c.JSON(statusCode, gin.H{"healthy": healthy})
+	c.JSON(statusCode, gin.H{"healthy": isHealthy})
 }
 
 // Version return dobby version
 func Version(c *gin.Context) {
+	if !isHealthy {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "application is not healthy"})
+		return
+	}
+
 	envVersion := os.Getenv("VERSION")
 	version := config.BuildVersion()
 	if envVersion != "" {
@@ -29,29 +36,20 @@ func Version(c *gin.Context) {
 	c.JSON(200, gin.H{"version": version})
 }
 
-// Crash will make dobby to kill itself
-func Crash(_ *gin.Context) {
-	log.Fatal("you asked me do so, killing myself :-)")
-}
-
-// Sick will make dobby sick
-func Sick(c *gin.Context) {
-	statusCode = 500
+// MakeHealthPerfect will make dobby's health perfect
+func MakeHealthPerfect(c *gin.Context) {
+	isHealthy = true
 	c.JSON(200, gin.H{"status": "success"})
 }
 
-// Healthy will make dobby healthy again
-func Healthy(c *gin.Context) {
-	statusCode = 200
+// MakeHealthSick will make dobby's health sick
+func MakeHealthSick(c *gin.Context) {
+	isHealthy = false
 	c.JSON(200, gin.H{"status": "success"})
 }
 
 func init() {
-	healthy, err := strconv.ParseBool(os.Getenv("HEALTH"))
-
-	if err != nil {
-		statusCode = 200
-	} else if !healthy {
-		statusCode = 500
+	if initialHealth, err := strconv.ParseBool(os.Getenv("INITIAL_HEALTH")); err == nil {
+		isHealthy = initialHealth
 	}
 }
