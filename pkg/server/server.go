@@ -2,10 +2,12 @@ package server
 
 import (
 	"fmt"
-	"github.com/gin-gonic/gin"
-	"github.com/thecasualcoder/dobby/pkg/handler"
+
 	"log"
 	"net/http"
+
+	"github.com/gin-gonic/gin"
+	"github.com/thecasualcoder/dobby/pkg/handler"
 )
 
 // Run the gin server in address and port specified
@@ -25,7 +27,7 @@ func Bind(root *gin.Engine, server *http.Server) {
 	{
 		root.GET("/health", handler.Health)
 		root.GET("/readiness", handler.Ready)
-		root.GET("/version", handler.Version)
+		root.GET("/meta", handler.Meta)
 	}
 	controlGroup := root.Group("/control")
 	{
