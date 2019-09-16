@@ -52,7 +52,7 @@ run: compile ## Run dobby
 compile-linux: ensure-build-dir ## Compile dobby for linux
 	GOOS=linux GOARCH=amd64 $(GO_BINARY) build -ldflags "-X main.majorVersion=$(VERSION) -X main.minorVersion=${BUILD}" -o $(APP_EXECUTABLE) ./main.go
 
-build: build-deps fmt vet lint-all compile ## Build the application
+build: build-deps fmt vet lint-all test compile ## Build the application
 
 compress: compile ## Compress the binary
 	upx $(APP_EXECUTABLE)
@@ -81,8 +81,6 @@ lint-all: lint setup-golangci-lint
 
 lint:
 	./scripts/lint $(SRC_PACKAGES)
-
-test-all: test test.integration
 
 test: ensure-build-dir ## Run tests
 	ENVIRONMENT=test $(GO_BINARY) test $(SRC_PACKAGES) -p=1 -coverprofile ./out/coverage -short -v | grep -vi "start" | grep -vi "no test files"
