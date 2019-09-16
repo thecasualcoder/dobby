@@ -7,6 +7,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/thecasualcoder/dobby/pkg/config"
 	"github.com/thecasualcoder/dobby/pkg/utils"
+	"strconv"
+	"time"
 )
 
 // Handler is provides HandlerFunc for Gin context
@@ -87,7 +89,18 @@ func (h *Handler) MakeHealthPerfect(c *gin.Context) {
 // MakeHealthSick will make dobby's health sick
 func (h *Handler) MakeHealthSick(c *gin.Context) {
 	h.isHealthy = false
+	setupResetFunction(c, func() {
+		h.isHealthy = true
+	})
 	c.JSON(200, gin.H{"status": "success"})
+}
+
+func setupResetFunction(c *gin.Context, afterFunc func()) {
+	const resetInSecondsQueryParam = "resetInSeconds"
+	resetTimer := c.Query(resetInSecondsQueryParam)
+	if resetInSeconds, err := strconv.Atoi(resetTimer); err == nil && resetInSeconds != 0 {
+		go time.AfterFunc(time.Second*time.Duration(resetInSeconds), afterFunc)
+	}
 }
 
 // MakeReadyPerfect will make dobby's readiness perfect
@@ -99,8 +112,8 @@ func (h *Handler) MakeReadyPerfect(c *gin.Context) {
 // MakeReadySick will make dobby's readiness sick
 func (h *Handler) MakeReadySick(c *gin.Context) {
 	h.isReady = false
+	setupResetFunction(c, func() {
+		h.isReady = true
+	})
 	c.JSON(200, gin.H{"status": "success"})
-}
-
-func init() {
 }

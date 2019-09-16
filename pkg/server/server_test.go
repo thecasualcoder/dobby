@@ -7,8 +7,15 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"strconv"
 	"testing"
+	"time"
 )
+
+func TestMain(m *testing.M) {
+	gin.SetMode(gin.TestMode)
+	os.Exit(m.Run())
+}
 
 func TestHealth(t *testing.T) {
 	t.Run("should return 200", func(t *testing.T) {
@@ -100,7 +107,11 @@ func TestVersion(t *testing.T) {
 
 	t.Run("should return 200 with given version", func(t *testing.T) {
 		router := gin.Default()
+		existingVersion := os.Getenv("VERSION")
 		_ = os.Setenv("VERSION", "v1")
+		defer func() {
+			_ = os.Setenv("VERSION", existingVersion)
+		}()
 		srv := httptest.NewServer(router).Config
 
 		server.Bind(router, srv, true, true)
@@ -124,6 +135,27 @@ func TestVersion(t *testing.T) {
 		assert.Equal(t, `{"error":"application is not healthy"}`, response.Body.String())
 	})
 
+	t.Run("should mark service as not healthy till n seconds", func(t *testing.T) {
+		router := gin.Default()
+		srv := httptest.NewServer(router).Config
+
+		server.Bind(router, srv, true, true)
+
+		// make service not ready
+		resetInSeconds := 1
+		performRequest(router, "PUT", "/control/health/sick?resetInSeconds="+strconv.Itoa(resetInSeconds))
+
+		response := performRequest(router, "GET", "/version")
+		assert.Equal(t, http.StatusInternalServerError, response.Code)
+		assert.Equal(t, `{"error":"application is not healthy"}`, response.Body.String())
+
+		time.Sleep(time.Duration(resetInSeconds)*time.Second + time.Millisecond)
+
+		response = performRequest(router, "GET", "/version")
+		assert.Equal(t, http.StatusOK, response.Code)
+		assert.Equal(t, `{"version":"1.0.0-dev"}`, response.Body.String())
+	})
+
 	t.Run("should return 503 if service is not ready", func(t *testing.T) {
 		router := gin.Default()
 		srv := httptest.NewServer(router).Config
@@ -136,6 +168,27 @@ func TestVersion(t *testing.T) {
 		response := performRequest(router, "GET", "/version")
 		assert.Equal(t, http.StatusServiceUnavailable, response.Code)
 		assert.Equal(t, `{"error":"application is not ready"}`, response.Body.String())
+	})
+
+	t.Run("should mark service as not ready till n seconds", func(t *testing.T) {
+		router := gin.Default()
+		srv := httptest.NewServer(router).Config
+
+		server.Bind(router, srv, true, true)
+
+		// make service not ready
+		resetInSeconds := 1
+		performRequest(router, "PUT", "/control/ready/sick?resetInSeconds="+strconv.Itoa(resetInSeconds))
+
+		response := performRequest(router, "GET", "/version")
+		assert.Equal(t, http.StatusServiceUnavailable, response.Code)
+		assert.Equal(t, `{"error":"application is not ready"}`, response.Body.String())
+
+		time.Sleep(time.Duration(resetInSeconds)*time.Second + time.Millisecond)
+
+		response = performRequest(router, "GET", "/version")
+		assert.Equal(t, http.StatusOK, response.Code)
+		assert.Equal(t, `{"version":"1.0.0-dev"}`, response.Body.String())
 	})
 }
 
