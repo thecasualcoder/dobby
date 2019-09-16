@@ -10,7 +10,6 @@ GOLINT:=$(shell command -v golint 2> /dev/null)
 APP_EXECUTABLE="./out/$(APP)"
 RICHGO=$(shell command -v richgo 2> /dev/null)
 GOMETA_LINT=$(shell command -v golangci-lint 2> /dev/null)
-GOLANGCI_LINT_VERSION=v1.12.5
 GO111MODULE=off
 SHELL=/bin/bash -o pipefail
 
@@ -65,7 +64,7 @@ vet:
 
 setup-golangci-lint:
 ifeq ($(GOMETA_LINT),)
-	curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s $(GOLANGCI_LINT_VERSION)
+	curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh
 endif
 
 setup: setup-golangci-lint ensure-build-dir ## Setup environment
