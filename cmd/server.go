@@ -18,15 +18,15 @@ func serverCmd() cli.Command {
 func serverFlags() []cli.Flag {
 	return []cli.Flag{
 		cli.StringFlag{
-			Name:  "bind-address, a",
-			Value: "127.0.0.1",
-			Usage: "Address of dobby server.",
+			Name:   "bind-address, a",
+			Value:  "127.0.0.1",
+			Usage:  "Address of dobby server.",
 			EnvVar: "BIND_ADDR",
 		},
 		cli.StringFlag{
-			Name:  "port, p",
-			Value: "4444",
-			Usage: "Port which will be used by dobby server.",
+			Name:   "port, p",
+			Value:  "4444",
+			Usage:  "Port which will be used by dobby server.",
 			EnvVar: "PORT",
 		},
 	}
