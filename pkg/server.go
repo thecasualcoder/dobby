@@ -18,6 +18,7 @@ func Run(bindAddress, port string) error {
 
 	{
 		r.GET("/health", handler.Health)
+		r.GET("/readiness", handler.Ready)
 		r.GET("/version", handler.Version)
 	}
 
@@ -25,6 +26,8 @@ func Run(bindAddress, port string) error {
 	{
 		controlGroup.PUT("/health/perfect", handler.MakeHealthPerfect)
 		controlGroup.PUT("/health/sick", handler.MakeHealthSick)
+		controlGroup.PUT("/ready/perfect", handler.MakeReadyPerfect)
+		controlGroup.PUT("/ready/sick", handler.MakeReadySick)
 		controlGroup.PUT("/crash", func(ctx *gin.Context) {
 			defer func() {
 				_ = server.Shutdown(ctx)

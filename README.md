@@ -13,6 +13,7 @@ which will start dobby server in port `4444`.
 You can ask dobby's
 
 - health `curl dobby:4444/health`
+- readiness `curl dobby:4444/readiness`
 - version `curl dobby:4444/version`
 
 You can order dobby to
@@ -24,6 +25,14 @@ You can order dobby to
 - fall sick
 
     `PUT /control/health/sick` which will make `/health` to return 500
+
+- be ready
+
+    `PUT /control/ready/perfect` which will make `/readiness` to return 200
+
+- not to be ready
+
+    `PUT /control/ready/sick` which will make `/readiness` to return 500
 
 - kill itself
 
