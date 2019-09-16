@@ -1,5 +1,9 @@
 # dobby
 
+[![Build Status](https://travis-ci.org/thecasualcoder/dobby.svg?branch=master)](https://travis-ci.org/thecasualcoder/dobby)
+[![Go Doc](https://godoc.org/github.com/thecasualcoder/dobby?status.svg)](https://godoc.org/github.com/thecasualcoder/dobby)
+[![Go Report Card](https://goreportcard.com/badge/github.com/thecasualcoder/dobby)](https://goreportcard.com/report/github.com/thecasualcoder/dobby)
+
 ![Dobby GIF](dobby.gif)
 
 dobby is **free** and will serve your orders.
