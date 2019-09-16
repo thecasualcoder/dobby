@@ -1,11 +1,13 @@
 package handler
 
 import (
-	"github.com/gin-gonic/gin"
-	"github.com/thecasualcoder/dobby/pkg/config"
 	"net/http"
 	"os"
 	"strconv"
+
+	"github.com/gin-gonic/gin"
+	"github.com/thecasualcoder/dobby/pkg/config"
+	"github.com/thecasualcoder/dobby/pkg/utils"
 )
 
 var (
@@ -31,8 +33,8 @@ func Ready(c *gin.Context) {
 	c.JSON(statusCode, gin.H{"ready": isReady})
 }
 
-// Version return dobby version
-func Version(c *gin.Context) {
+// Meta return dobby metadata
+func Meta(c *gin.Context) {
 	if !isReady {
 		c.JSON(http.StatusServiceUnavailable, gin.H{"error": "application is not ready"})
 		return
@@ -47,7 +49,8 @@ func Version(c *gin.Context) {
 	if envVersion != "" {
 		version = envVersion
 	}
-	c.JSON(200, gin.H{"version": version})
+
+	c.JSON(200, gin.H{"IP": utils.GetOutboundIP(), "HostName": os.Getenv("HOSTNAME"), "version": version})
 }
 
 // MakeHealthPerfect will make dobby's health perfect
