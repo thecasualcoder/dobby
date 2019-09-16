@@ -10,7 +10,7 @@ GOLINT:=$(shell command -v golint 2> /dev/null)
 APP_EXECUTABLE="./out/$(APP)"
 RICHGO=$(shell command -v richgo 2> /dev/null)
 GOMETA_LINT=$(shell command -v golangci-lint 2> /dev/null)
-GO111MODULE=off
+GO111MODULE=on
 SHELL=/bin/bash -o pipefail
 
 ifeq ($(GOMETA_LINT),)
@@ -69,10 +69,10 @@ endif
 
 setup: setup-golangci-lint ensure-build-dir ## Setup environment
 ifeq ($(GOLINT),)
-	$(GO_BINARY) get -u golang.org/x/lint/golint
+	GO111MODULE=off $(GO_BINARY) get -u golang.org/x/lint/golint
 endif
 ifeq ($(RICHGO),)
-	$(GO_BINARY) get -u github.com/kyoh86/richgo
+	GO111MODULE=off $(GO_BINARY) get -u github.com/kyoh86/richgo
 endif
 
 lint-all: lint setup-golangci-lint
