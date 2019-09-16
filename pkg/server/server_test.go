@@ -15,7 +15,7 @@ func TestHealth(t *testing.T) {
 		router := gin.Default()
 		srv := httptest.NewServer(router).Config
 
-		server.Bind(router, srv)
+		server.Bind(router, srv, true, true)
 
 		response := performRequest(router, "GET", "/health")
 		assert.Equal(t, http.StatusOK, response.Code)
@@ -28,7 +28,7 @@ func TestReadiness(t *testing.T) {
 		router := gin.Default()
 		srv := httptest.NewServer(router).Config
 
-		server.Bind(router, srv)
+		server.Bind(router, srv, true, true)
 
 		response := performRequest(router, "GET", "/readiness")
 		assert.Equal(t, http.StatusOK, response.Code)
@@ -41,7 +41,7 @@ func TestHealthToggles(t *testing.T) {
 		router := gin.Default()
 		srv := httptest.NewServer(router).Config
 
-		server.Bind(router, srv)
+		server.Bind(router, srv, true, true)
 
 		response := performRequest(router, "PUT", "/control/health/sick")
 		assert.Equal(t, http.StatusOK, response.Code)
@@ -66,7 +66,7 @@ func TestReadinessToggles(t *testing.T) {
 		router := gin.Default()
 		srv := httptest.NewServer(router).Config
 
-		server.Bind(router, srv)
+		server.Bind(router, srv, true, true)
 
 		response := performRequest(router, "PUT", "/control/ready/sick")
 		assert.Equal(t, http.StatusOK, response.Code)
@@ -91,7 +91,7 @@ func TestVersion(t *testing.T) {
 		router := gin.Default()
 		srv := httptest.NewServer(router).Config
 
-		server.Bind(router, srv)
+		server.Bind(router, srv, true, true)
 
 		response := performRequest(router, "GET", "/version")
 		assert.Equal(t, http.StatusOK, response.Code)
@@ -103,7 +103,7 @@ func TestVersion(t *testing.T) {
 		_ = os.Setenv("VERSION", "v1")
 		srv := httptest.NewServer(router).Config
 
-		server.Bind(router, srv)
+		server.Bind(router, srv, true, true)
 
 		response := performRequest(router, "GET", "/version")
 		assert.Equal(t, http.StatusOK, response.Code)
@@ -114,7 +114,7 @@ func TestVersion(t *testing.T) {
 		router := gin.Default()
 		srv := httptest.NewServer(router).Config
 
-		server.Bind(router, srv)
+		server.Bind(router, srv, true, true)
 
 		// make health sick
 		performRequest(router, "PUT", "/control/health/sick")
@@ -122,16 +122,13 @@ func TestVersion(t *testing.T) {
 		response := performRequest(router, "GET", "/version")
 		assert.Equal(t, http.StatusInternalServerError, response.Code)
 		assert.Equal(t, `{"error":"application is not healthy"}`, response.Body.String())
-
-		// make health perfect again
-		performRequest(router, "PUT", "/control/health/perfect")
 	})
 
 	t.Run("should return 503 if service is not ready", func(t *testing.T) {
 		router := gin.Default()
 		srv := httptest.NewServer(router).Config
 
-		server.Bind(router, srv)
+		server.Bind(router, srv, true, true)
 
 		// make service not ready
 		performRequest(router, "PUT", "/control/ready/sick")
@@ -139,9 +136,6 @@ func TestVersion(t *testing.T) {
 		response := performRequest(router, "GET", "/version")
 		assert.Equal(t, http.StatusServiceUnavailable, response.Code)
 		assert.Equal(t, `{"error":"application is not ready"}`, response.Body.String())
-
-		// make readiness perfect again
-		performRequest(router, "PUT", "/control/ready/perfect")
 	})
 }
 
