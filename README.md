@@ -4,20 +4,29 @@
 
 dobby is **free** and will serve your orders.
 
-You can start dobby using:
+You can start dobby in Docker using:
 
-```
-dobby server
+```bash
+$ docker run -p 4444:4444 thecasualcoder/dobby
 ```
 
 which will start dobby server in port `4444`.
 
 You can ask dobby's
 
-- health `curl dobby:4444/health`
-- readiness `curl dobby:4444/readiness`
-- version `curl dobby:4444/version`
-- meta `curl dobby:4444/meta`
+```bash
+## To get health
+curl -i localhost:4444/health
+
+## To get readiness
+curl localhost:4444/readiness
+
+## To get version
+curl localhost:4444/version
+
+## To get metadata about the host
+curl localhost:4444/meta
+```
 
 You can order dobby to
 
@@ -29,6 +38,10 @@ You can order dobby to
 
   `PUT /control/health/sick` which will make `/health` to return 500
 
+- recover health after sometime
+
+  `PUT /control/health/sick?resetInSeconds=2` which will make `/health` to return 500 for 2 seconds
+
 - be ready
 
   `PUT /control/ready/perfect` which will make `/readiness` to return 200
@@ -36,6 +49,10 @@ You can order dobby to
 - not to be ready
 
   `PUT /control/ready/sick` which will make `/readiness` to return 500
+
+- recover readiness after sometime
+
+  `PUT /control/ready/sick?resetInSeconds=2` which will make `/readiness` to return 503 for 2 seconds
 
 - kill itself
 
@@ -55,18 +72,12 @@ Available configurations:
 | PORT              | Int    | Sets the port of the server               | 4444      |
 | BIND_ADDR         | String | Listen address of the process             | 127.0.0.1 |
 
-### Docker
-
-```
-docker run thecasualcoder/dobby
-```
-
 ### Run in local
 
-```
-git clone https://github.com/thecasualcoder/dobby.git && cd dobby
-make compile
-./out/dobby server
+```bash
+$ git clone https://github.com/thecasualcoder/dobby.git && cd dobby
+$ make compile
+$ ./out/dobby server
 ```
 
 ### Contributing
@@ -74,5 +85,6 @@ make compile
 Fork the repo and start contributing
 
 #### Guidelines
-- Make sure to run build before raising PR (make build)
+
+- Make sure to run build before raising PR (`make build`)
 - Update README.md if necessary
