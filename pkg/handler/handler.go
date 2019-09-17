@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"log"
 	"net/http"
 	"os"
 
@@ -116,4 +117,16 @@ func (h *Handler) MakeReadySick(c *gin.Context) {
 		h.isReady = true
 	})
 	c.JSON(200, gin.H{"status": "success"})
+}
+
+// Crash will make dobby to kill itself
+// As dobby dies, the gin server also shuts down.
+func Crash(server *http.Server) func(ctx *gin.Context) {
+	return func(ctx *gin.Context) {
+		defer func() {
+			_ = server.Shutdown(ctx)
+		}()
+
+		log.Fatal("you asked me do so, killing myself :-)")
+	}
 }

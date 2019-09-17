@@ -3,7 +3,6 @@ package server
 import (
 	"fmt"
 
-	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -37,12 +36,6 @@ func Bind(root *gin.Engine, server *http.Server, initialHealth, initialReadiness
 		controlGroup.PUT("/health/sick", h.MakeHealthSick)
 		controlGroup.PUT("/ready/perfect", h.MakeReadyPerfect)
 		controlGroup.PUT("/ready/sick", h.MakeReadySick)
-		controlGroup.PUT("/crash", func(ctx *gin.Context) {
-			defer func() {
-				_ = server.Shutdown(ctx)
-			}()
-
-			log.Fatal("you asked me do so, killing myself :-)")
-		})
+		controlGroup.PUT("/crash", handler.Crash(server))
 	}
 }
