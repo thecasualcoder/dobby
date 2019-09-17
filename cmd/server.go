@@ -63,7 +63,7 @@ func runServer(context *cli.Context) {
 	}
 
 	initialReadiness := true
-	if readiness, err := strconv.ParseBool(context.String("initial-health")); err == nil {
+	if readiness, err := strconv.ParseBool(context.String("initial-readiness")); err == nil {
 		initialReadiness = readiness
 	}
 
