@@ -1,4 +1,4 @@
-FROM golang:1.11.4 as builder
+FROM golang:1.13 as builder
 WORKDIR /go/src/github.com/thecasualcoder/dobby
 RUN curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
 COPY ./ ./
