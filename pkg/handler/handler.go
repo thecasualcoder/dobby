@@ -143,3 +143,15 @@ func GoTurboMemory(c *gin.Context) {
 	}()
 	c.JSON(200, gin.H{"status": "success"})
 }
+
+// GoTurboCPU will make dobby go Turbo
+// Watch the video `https://youtu.be/TNjAZZ3vQ8o?t=14`
+// for more context on `Going Turbo`
+func GoTurboCPU(c *gin.Context) {
+	go func() {
+		for {
+			_ = 0
+		}
+	}()
+	c.JSON(200, gin.H{"status": "success"})
+}
