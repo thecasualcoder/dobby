@@ -68,13 +68,14 @@ You can order dobby to
 
 Available configurations:
 
-| Key               | Value  | Purpose                                   | Default   |
-| ----------------- | ------ | ----------------------------------------- | --------- |
-| VERSION           | String | To set the version of program             | Build Arg |
-| INITIAL_HEALTH    | String | Sets the initial health of the program    | TRUE      |
-| INITIAL_READINESS | String | Sets the initial readiness of the program | TRUE      |
-| PORT              | Int    | Sets the port of the server               | 4444      |
-| BIND_ADDR         | String | Listen address of the process             | 127.0.0.1 |
+| Key               | Value  | Purpose                                                    | Default   |
+| ----------------- | ------ | ---------------------------------------------------------- | --------- |
+| VERSION           | String | To set the version of program                              | Build Arg |
+| INITIAL_DELAY     | Int    | Sets the initial delay to start the server (in seconds)    | 0         |
+| INITIAL_HEALTH    | String | Sets the initial health of the program                     | TRUE      |
+| INITIAL_READINESS | String | Sets the initial readiness of the program                  | TRUE      |
+| PORT              | Int    | Sets the port of the server                                | 4444      |
+| BIND_ADDR         | String | Listen address of the process                              | 127.0.0.1 |
 
 ### Run in local
 

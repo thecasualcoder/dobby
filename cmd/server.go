@@ -4,6 +4,7 @@ import (
 	"github.com/thecasualcoder/dobby/pkg/server"
 	"github.com/urfave/cli"
 	"strconv"
+	"time"
 )
 
 func serverCmd() cli.Command {
@@ -42,12 +43,20 @@ func serverFlags() []cli.Flag {
 			Usage:  "Sets the Initial readiness of the server (/readiness) (true|false)",
 			Value:  "true",
 		},
+		cli.Int64Flag{
+			Name:   "initial-delay",
+			EnvVar: "INITIAL_DELAY",
+			Usage:  "Sets the Initial delay to start the server (in seconds)",
+			Value:  0,
+		},
 	}
 }
 
 func runServer(context *cli.Context) {
 	bindAddress := context.String("bind-address")
 	port := context.String("port")
+	initialDelay := time.Duration(context.Int64("initial-delay")) * time.Second
+	time.Sleep(initialDelay)
 	initialHealth := true
 	if health, err := strconv.ParseBool(context.String("initial-health")); err == nil {
 		initialHealth = health
