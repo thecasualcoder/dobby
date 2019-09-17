@@ -36,6 +36,7 @@ func Bind(root *gin.Engine, server *http.Server, initialHealth, initialReadiness
 		controlGroup.PUT("/health/sick", h.MakeHealthSick)
 		controlGroup.PUT("/ready/perfect", h.MakeReadyPerfect)
 		controlGroup.PUT("/ready/sick", h.MakeReadySick)
+		controlGroup.PUT("/goturbo/memory", handler.GoTurboMemory)
 		controlGroup.PUT("/crash", handler.Crash(server))
 	}
 }

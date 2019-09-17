@@ -130,3 +130,16 @@ func Crash(server *http.Server) func(ctx *gin.Context) {
 		log.Fatal("you asked me do so, killing myself :-)")
 	}
 }
+
+// GoTurboMemory will make dobby go Turbo
+// Watch the video `https://youtu.be/TNjAZZ3vQ8o?t=14`
+// for more context on `Going Turbo`
+func GoTurboMemory(c *gin.Context) {
+	memorySpike := []string{"qwertyuiopasdfghjklzxcvbnm"}
+	go func() {
+		for {
+			memorySpike = append(memorySpike, memorySpike...)
+		}
+	}()
+	c.JSON(200, gin.H{"status": "success"})
+}
