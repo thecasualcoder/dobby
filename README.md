@@ -58,6 +58,14 @@ You can order dobby to
 
   `PUT /control/ready/sick?resetInSeconds=2` which will make `/readiness` to return 503 for 2 seconds
 
+- add load on memory
+
+  `PUT /control/goturbo/memory` which will create a memory spike
+
+- add load on CPU
+
+  `PUT /control/goturbo/cpu` which will create a CPU spike
+
 - kill itself
 
   `PUT /state/crash` which will crash the server
