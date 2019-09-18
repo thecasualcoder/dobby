@@ -52,7 +52,7 @@ You can order dobby to
 
 - not to be ready
 
-  `PUT /control/ready/sick` which will make `/readiness` to return 500
+  `PUT /control/ready/sick` which will make `/readiness` to return 503
 
 - recover readiness after sometime
 
