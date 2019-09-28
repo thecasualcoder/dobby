@@ -25,7 +25,7 @@ spec:
             - name: INITIAL_HEALTH
               value: "TRUE"
             - name: INITIAL_READINESS
-              value: "FALSE"
+              value: "TRUE"
           ports:
             - containerPort: 4444
           readinessProbe:
