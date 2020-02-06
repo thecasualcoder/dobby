@@ -1,6 +1,5 @@
 FROM golang:1.13 as builder
 WORKDIR /go/src/github.com/thecasualcoder/dobby
-RUN curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
 COPY ./ ./
 RUN make build-deps compile
 
