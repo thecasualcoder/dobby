@@ -18,17 +18,23 @@ which will start dobby server in port `4444`.
 
 You can ask dobby's
 
+- health
+
 ```bash
-## To get health
 curl -i localhost:4444/health
-
-## To get readiness
+```
+- readiness
+```bash
 curl localhost:4444/readiness
+```
 
-## To get version
+- version
+```bash
 curl localhost:4444/version
+```
 
-## To get metadata about the host
+- metadata about the host
+```bash
 curl localhost:4444/meta
 ```
 
@@ -68,7 +74,7 @@ You can order dobby to
 
 - kill itself
 
-  `PUT /state/crash` which will crash the server
+  `PUT /control/crash` which will crash the server
 
 ## Run
 
