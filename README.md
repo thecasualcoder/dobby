@@ -20,23 +20,23 @@ You can ask dobby's
 
 - health
 
-```bash
-curl -i localhost:4444/health
-```
+  ```bash
+  curl -i localhost:4444/health
+  ```
 - readiness
-```bash
-curl localhost:4444/readiness
-```
+  ```bash
+  curl localhost:4444/readiness
+  ```
 
 - version
-```bash
-curl localhost:4444/version
-```
+  ```bash
+  curl localhost:4444/version
+  ```
 
 - metadata about the host
-```bash
-curl localhost:4444/meta
-```
+  ```bash
+  curl localhost:4444/meta
+  ```
 
 You can order dobby to
 
