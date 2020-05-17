@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -79,6 +80,26 @@ func (h *Handler) Meta(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"IP": ip, "HostName": os.Getenv("HOSTNAME")})
+}
+
+// HTTPStat returns the status code send by the client
+func (h *Handler) HTTPStat(c *gin.Context) {
+	returnCodeStr := c.Param("statusCode")
+	returnCode, err := strconv.Atoi(returnCodeStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("error converting the statusCode to int: %s", err.Error())})
+		return
+	}
+
+	if delayStr := c.Query("delay"); delayStr != "" {
+		delay, err := strconv.Atoi(delayStr)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("error converting the delay to int: %s", err.Error())})
+			return
+		}
+		time.Sleep(time.Duration(delay) * time.Millisecond)
+	}
+	c.Status(returnCode)
 }
 
 // MakeHealthPerfect will make dobby's health perfect
