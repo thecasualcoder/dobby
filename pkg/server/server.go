@@ -29,7 +29,7 @@ func Bind(root *gin.Engine, server *http.Server, initialHealth, initialReadiness
 		root.GET("/readiness", h.Ready)
 		root.GET("/version", h.Version)
 		root.GET("/meta", h.Meta)
-		root.GET("/return/:statusCode", h.HttpStat)
+		root.GET("/return/:statusCode", h.HTTPStat)
 	}
 	controlGroup := root.Group("/control")
 	{

@@ -82,8 +82,8 @@ func (h *Handler) Meta(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"IP": ip, "HostName": os.Getenv("HOSTNAME")})
 }
 
-// HttpStat returns the status code send by the client
-func (h *Handler) HttpStat(c *gin.Context) {
+// HTTPStat returns the status code send by the client
+func (h *Handler) HTTPStat(c *gin.Context) {
 	returnCodeStr := c.Param("statusCode")
 	returnCode, err := strconv.Atoi(returnCodeStr)
 	if err != nil {
