@@ -87,8 +87,17 @@ func (h *Handler) HttpStat(c *gin.Context) {
 	returnCodeStr := c.Param("statusCode")
 	returnCode, err := strconv.Atoi(returnCodeStr)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Errorf("error converting the statusCode: %s", err.Error())})
+		c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("error converting the statusCode to int: %s", err.Error())})
 		return
+	}
+
+	if delayStr := c.Query("delay"); delayStr != "" {
+		delay, err := strconv.Atoi(delayStr)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("error converting the delay to int: %s", err.Error())})
+			return
+		}
+		time.Sleep(time.Duration(delay) * time.Millisecond)
 	}
 	c.Status(returnCode)
 }
