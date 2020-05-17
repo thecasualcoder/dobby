@@ -40,6 +40,18 @@ You can ask dobby's
 
 You can order dobby to
 
+- Repeat the status code
+  ```bash
+  $ curl localhost:4444/return/200 -i
+  HTTP/1.1 200 OK
+  Date: Sun, 17 May 2020 09:51:13 GMT
+  Content-Length: 0
+
+  $ curl localhost:4444/return/401 -i
+  HTTP/1.1 401 Unauthorized
+  Date: Sun, 17 May 2020 09:50:34 GMT
+  Content-Length: 0
+  ```
 - be healthy
 
   `PUT /control/health/perfect` which will make `/health` to return 200

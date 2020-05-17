@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -79,6 +80,17 @@ func (h *Handler) Meta(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"IP": ip, "HostName": os.Getenv("HOSTNAME")})
+}
+
+// HttpStat returns the status code send by the client
+func (h *Handler) HttpStat(c *gin.Context) {
+	returnCodeStr := c.Param("statusCode")
+	returnCode, err := strconv.Atoi(returnCodeStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Errorf("error converting the statusCode: %s", err.Error())})
+		return
+	}
+	c.Status(returnCode)
 }
 
 // MakeHealthPerfect will make dobby's health perfect
