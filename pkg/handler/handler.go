@@ -22,8 +22,8 @@ type Handler struct {
 // New creates a new Handler
 func New(initialHealth, initialReadiness bool) *Handler {
 	return &Handler{
-		isReady:   initialHealth,
-		isHealthy: initialReadiness,
+		isReady:   initialReadiness,
+		isHealthy: initialHealth,
 	}
 }
 
