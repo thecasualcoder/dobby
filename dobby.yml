@@ -1,0 +1,37 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: dobby
+  name: dobby
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: dobby
+  template:
+    metadata:
+      labels:
+        app: dobby
+    spec:
+      containers:
+      - image: dineshba/endgame:latest
+        imagePullPolicy: Always
+        name: dobby
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: dobby
+  name: dobby
+spec:
+  ports:
+  - nodePort: 32223
+    port: 80
+    protocol: TCP
+    targetPort: 4444
+  selector:
+    app: dobby
+  type: NodePort

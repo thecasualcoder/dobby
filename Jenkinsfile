@@ -43,7 +43,7 @@ spec:
             steps {
               container('docker') {
                 script {
-                    def imageTag = "$registry:${GIT_BRANCH}-${BUILD_NUMBER}"
+                    def imageTag = "$registry:latest"
                     dockerImage = docker.build imageTag
                 }
               }
@@ -59,6 +59,14 @@ spec:
                     }
                 }
               }
+            }
+        }
+
+        stage('Deploy App') {
+             steps {
+                script {
+                    kubernetesDeploy(configs: "myweb.yaml", kubeconfigId: "mykubeconfig")
+                }
             }
         }
     }
