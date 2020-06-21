@@ -21,6 +21,13 @@ spec:
 """
         }
     }
+
+    environment {
+        registry = "dineshba/endgame"
+        registryCredential = 'dockerhub'
+        dockerImage = ""
+    }
+
     stages {
         stage('Validations') {
             steps {
@@ -36,8 +43,20 @@ spec:
             steps {
               container('docker') {
                 script {
-                    def imageTag = "dineshba:${GIT_BRANCH}-${BUILD_NUMBER}"
-                    sh "docker build -f Dockerfile . -t ${imageTag}"
+                    def imageTag = "$registry:${GIT_BRANCH}-${BUILD_NUMBER}"
+                    dockerImage = docker.build imageTag
+                }
+              }
+            }
+        }
+
+        stage('docker publish') {
+            steps {
+              container('docker') {
+                script {
+                    docker.withRegistry("", registryCredential) {
+                        dockerImage.push()
+                    }
                 }
               }
             }
