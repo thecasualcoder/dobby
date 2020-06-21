@@ -17,6 +17,7 @@ spec:
         privileged: true
   - name: golang
     image: golang
+    command: ["sleep", "10000"]
 """
         }
     }
