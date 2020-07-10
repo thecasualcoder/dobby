@@ -157,13 +157,17 @@ func (h *Handler) Call(c *gin.Context) {
 		return
 	}
 	decoder = json.NewDecoder(response.Body)
-	var res interface{}
-	err = decoder.Decode(&res)
-	if err != nil {
-		c.JSON(400, gin.H{"error": fmt.Sprintf("error when decoding response from %s: %s", callRequest.URL, err.Error())})
+	if decoder.More() {
+		var res interface{}
+		err = decoder.Decode(&res)
+		if err != nil {
+			c.JSON(400, gin.H{"error": fmt.Sprintf("error when decoding response from %s: %s", callRequest.URL, err.Error())})
+			return
+		}
+		c.JSON(response.StatusCode, res)
 		return
 	}
-	c.JSON(response.StatusCode, res)
+	c.Status(response.StatusCode)
 }
 
 func makeCall(callRequest callRequest) (*http.Response, error) {
