@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"os"
@@ -15,18 +16,53 @@ import (
 	"time"
 )
 
-// Handler is provides HandlerFunc for Gin context
+// Handler is provides HandlerFunc for Gin Context
 type Handler struct {
 	isHealthy bool
 	isReady   bool
+	client    httpClient
+}
+
+type httpClient interface {
+	Do(req *http.Request) (*http.Response, error)
 }
 
 // New creates a new Handler
-func New(initialHealth, initialReadiness bool) *Handler {
+func New(initialHealth, initialReadiness bool, httpClient httpClient) *Handler {
 	return &Handler{
 		isReady:   initialReadiness,
 		isHealthy: initialHealth,
+		client:    httpClient,
 	}
+}
+
+// Context is the interface represents the minimalistic gin.Context
+// this is used to create mock struct while testing
+type Context interface {
+	JSON(code int, obj interface{})
+	GetRequestBody() io.ReadCloser
+	Status(code int)
+}
+
+type defaultContext struct {
+	ginContext *gin.Context
+}
+
+// NewDefaultContext creates the wrapper Context with gin Context
+func NewDefaultContext(c *gin.Context) Context {
+	return defaultContext{ginContext: c}
+}
+
+func (c defaultContext) Status(code int) {
+	c.ginContext.Status(code)
+}
+
+func (c defaultContext) JSON(code int, obj interface{}) {
+	c.ginContext.JSON(code, obj)
+}
+
+func (c defaultContext) GetRequestBody() io.ReadCloser {
+	return c.ginContext.Request.Body
 }
 
 // Health return the dobby health status
@@ -143,15 +179,15 @@ func (h *Handler) MakeReadySick(c *gin.Context) {
 }
 
 // Call another service and send the response
-func (h *Handler) Call(c *gin.Context) {
-	decoder := json.NewDecoder(c.Request.Body)
+func (h *Handler) Call(c Context) {
+	decoder := json.NewDecoder(c.GetRequestBody())
 	var callRequest callRequest
 	err := decoder.Decode(&callRequest)
 	if err != nil {
 		c.JSON(400, gin.H{"error": fmt.Sprintf("error when decoding request: %s", err.Error())})
 		return
 	}
-	response, err := makeCall(callRequest)
+	response, err := h.makeCall(callRequest)
 	if err != nil {
 		c.JSON(400, gin.H{"error": fmt.Sprintf("error when making request to %s: %s", callRequest.URL, err.Error())})
 		return
@@ -170,8 +206,7 @@ func (h *Handler) Call(c *gin.Context) {
 	c.Status(response.StatusCode)
 }
 
-func makeCall(callRequest callRequest) (*http.Response, error) {
-	client := http.Client{}
+func (h *Handler) makeCall(callRequest callRequest) (*http.Response, error) {
 	marshal, err := json.Marshal(callRequest.Body)
 	if err != nil {
 		return nil, fmt.Errorf("error when marshalling request body: %s", err)
@@ -180,7 +215,7 @@ func makeCall(callRequest callRequest) (*http.Response, error) {
 	if err != nil {
 		return nil, fmt.Errorf("error when creating new request to %s: %s", callRequest.URL, err)
 	}
-	return client.Do(request)
+	return h.client.Do(request)
 }
 
 type callRequest struct {

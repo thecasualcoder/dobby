@@ -23,14 +23,17 @@ func Run(bindAddress, port string, initialHealth, initialReadiness bool) error {
 
 // Bind binds all the routes to gin engine
 func Bind(root *gin.Engine, server *http.Server, initialHealth, initialReadiness bool) {
-	h := handler.New(initialHealth, initialReadiness)
+	h := handler.New(initialHealth, initialReadiness, &http.Client{})
 	{
 		root.GET("/health", h.Health)
 		root.GET("/readiness", h.Ready)
 		root.GET("/version", h.Version)
 		root.GET("/meta", h.Meta)
 		root.GET("/return/:statusCode", h.HTTPStat)
-		root.POST("/call", h.Call)
+		root.POST("/call", func(context *gin.Context) {
+			defaultContext := handler.NewDefaultContext(context)
+			h.Call(defaultContext)
+		})
 	}
 	controlGroup := root.Group("/control")
 	{
