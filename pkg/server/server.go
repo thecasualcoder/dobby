@@ -30,6 +30,7 @@ func Bind(root *gin.Engine, server *http.Server, initialHealth, initialReadiness
 		root.GET("/version", h.Version)
 		root.GET("/meta", h.Meta)
 		root.GET("/return/:statusCode", h.HTTPStat)
+		root.POST("/call", h.Call)
 	}
 	controlGroup := root.Group("/control")
 	{

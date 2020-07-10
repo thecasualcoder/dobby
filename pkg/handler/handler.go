@@ -1,6 +1,8 @@
 package handler
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
@@ -138,6 +140,49 @@ func (h *Handler) MakeReadySick(c *gin.Context) {
 		h.isReady = true
 	})
 	c.JSON(200, gin.H{"status": "success"})
+}
+
+// Call another service and send the response
+func (h *Handler) Call(c *gin.Context) {
+	decoder := json.NewDecoder(c.Request.Body)
+	var callRequest callRequest
+	err := decoder.Decode(&callRequest)
+	if err != nil {
+		c.JSON(400, gin.H{"error": fmt.Sprintf("error when decoding request: %s", err.Error())})
+		return
+	}
+	response, err := makeCall(callRequest)
+	if err != nil {
+		c.JSON(400, gin.H{"error": fmt.Sprintf("error when making request to %s: %s", callRequest.URL, err.Error())})
+		return
+	}
+	decoder = json.NewDecoder(response.Body)
+	var res interface{}
+	err = decoder.Decode(&res)
+	if err != nil {
+		c.JSON(400, gin.H{"error": fmt.Sprintf("error when decoding response from %s: %s", callRequest.URL, err.Error())})
+		return
+	}
+	c.JSON(response.StatusCode, res)
+}
+
+func makeCall(callRequest callRequest) (*http.Response, error) {
+	client := http.Client{}
+	marshal, err := json.Marshal(callRequest.Body)
+	if err != nil {
+		return nil, fmt.Errorf("error when marshalling request body: %s", err)
+	}
+	request, err := http.NewRequest(callRequest.Method, callRequest.URL, bytes.NewBuffer(marshal))
+	if err != nil {
+		return nil, fmt.Errorf("error when creating new request to %s: %s", callRequest.URL, err)
+	}
+	return client.Do(request)
+}
+
+type callRequest struct {
+	URL    string      `json:"url"`
+	Method string      `json:"method"`
+	Body   interface{} `json:"body"`
 }
 
 // Crash will make dobby to kill itself
