@@ -90,4 +90,24 @@ func TestHandler_Call(t *testing.T) {
 
 		handler.Call(mockContext)
 	})
+
+	t.Run("should parse return special characters in string", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+		httpClient := mock.NewMockhttpClient(ctrl)
+		mockContext := mock.NewMockContext(ctrl)
+		handler := New(true, true, httpClient)
+
+		stringReader := strings.NewReader(`
+{
+ "url": "http://localhost:4444/version"
+}`)
+		mockContext.EXPECT().GetRequestBody().Return(ioutil.NopCloser(stringReader))
+		httpClient.EXPECT().Do(gomock.Any()).Return(&http.Response{StatusCode: 200, Body: ioutil.NopCloser(strings.NewReader("⛅️  +33°C"))}, nil)
+		mockContext.EXPECT().JSON(200, gomock.Any()).Do(func(_ int, data interface{}) {
+			assert.Equal(t, "⛅️  +33°C", data)
+		})
+
+		handler.Call(mockContext)
+	})
 }

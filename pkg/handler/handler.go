@@ -5,9 +5,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/thecasualcoder/dobby/pkg/config"
@@ -192,10 +194,19 @@ func (h *Handler) Call(c Context) {
 		c.JSON(400, gin.H{"error": fmt.Sprintf("error when making request to %s: %s", callRequest.URL, err.Error())})
 		return
 	}
-	decoder = json.NewDecoder(response.Body)
-	if decoder.More() {
+	responseData, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+		c.JSON(400, gin.H{"error": fmt.Sprintf("error when reading response from %s: %s", callRequest.URL, err.Error())})
+		return
+	}
+	if len(responseData) == 0 {
+		c.Status(response.StatusCode)
+		return
+	}
+	responseStr := string(responseData)
+	if strings.HasPrefix(responseStr, "{") || strings.HasPrefix(responseStr, "[") {
 		var res interface{}
-		err = decoder.Decode(&res)
+		err = json.Unmarshal(responseData, &res)
 		if err != nil {
 			c.JSON(400, gin.H{"error": fmt.Sprintf("error when decoding response from %s: %s", callRequest.URL, err.Error())})
 			return
@@ -203,7 +214,7 @@ func (h *Handler) Call(c Context) {
 		c.JSON(response.StatusCode, res)
 		return
 	}
-	c.Status(response.StatusCode)
+	c.JSON(response.StatusCode, responseStr)
 }
 
 func (h *Handler) makeCall(callRequest callRequest) (*http.Response, error) {
