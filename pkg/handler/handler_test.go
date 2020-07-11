@@ -111,3 +111,65 @@ func TestHandler_Call(t *testing.T) {
 		handler.Call(mockContext)
 	})
 }
+
+func TestHandler_AddProxy(t *testing.T) {
+	t.Run("should add the proxy request to handler", func(t *testing.T) {
+		handler := New(true, true, nil)
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+		mockContext := mock.NewMockContext(ctrl)
+		stringReader := strings.NewReader(`
+{
+  "path": "/v1/version",
+  "method": "GET",
+  "proxy": {
+    "url": "http://dobby2/version",
+    "method": "GET"
+  }
+}`)
+		mockContext.EXPECT().GetRequestBody().Return(ioutil.NopCloser(stringReader))
+		mockContext.EXPECT().Status(201)
+
+		handler.AddProxy(mockContext)
+
+		assert.Len(t, handler.proxyRequests, 1)
+		expectedProxyRequest := proxyRequest{
+			Path:   "/v1/version",
+			Method: "GET", Proxy: proxy{
+				URL:    "http://dobby2/version",
+				Method: "GET",
+			},
+		}
+		assert.Equal(t, expectedProxyRequest, handler.proxyRequests[0])
+	})
+
+	t.Run("should not add the proxy request if the same url and same method is added", func(t *testing.T) {
+		handler := New(true, true, nil)
+		handler.proxyRequests = proxyRequests{proxyRequest{
+			Path:   "/v1/version",
+			Method: "GET",
+		}}
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+		mockContext := mock.NewMockContext(ctrl)
+		stringReader := strings.NewReader(`
+{
+  "path": "/v1/version",
+  "method": "GET"
+}`)
+
+		mockContext.EXPECT().GetRequestBody().Return(ioutil.NopCloser(stringReader))
+		mockContext.EXPECT().JSON(400, gomock.Any()).Do(func(_ int, data interface{}) {
+			assert.EqualValues(t, "proxy configuration for url: /v1/version and method: GET is already added", data.(gin.H)["error"])
+		})
+
+		handler.AddProxy(mockContext)
+
+		assert.Len(t, handler.proxyRequests, 1)
+		expectedProxyRequest := proxyRequest{
+			Path:   "/v1/version",
+			Method: "GET",
+		}
+		assert.Equal(t, expectedProxyRequest, handler.proxyRequests[0])
+	})
+}

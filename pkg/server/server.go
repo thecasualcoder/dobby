@@ -30,6 +30,10 @@ func Bind(root *gin.Engine, server *http.Server, initialHealth, initialReadiness
 		root.GET("/version", h.Version)
 		root.GET("/meta", h.Meta)
 		root.GET("/return/:statusCode", h.HTTPStat)
+		root.POST("/proxy", func(context *gin.Context) {
+			defaultContext := handler.NewDefaultContext(context)
+			h.AddProxy(defaultContext)
+		})
 		root.POST("/call", func(context *gin.Context) {
 			defaultContext := handler.NewDefaultContext(context)
 			h.Call(defaultContext)

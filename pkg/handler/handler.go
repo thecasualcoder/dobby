@@ -20,9 +20,10 @@ import (
 
 // Handler is provides HandlerFunc for Gin Context
 type Handler struct {
-	isHealthy bool
-	isReady   bool
-	client    httpClient
+	isHealthy     bool
+	isReady       bool
+	client        httpClient
+	proxyRequests proxyRequests
 }
 
 type httpClient interface {
@@ -32,9 +33,10 @@ type httpClient interface {
 // New creates a new Handler
 func New(initialHealth, initialReadiness bool, httpClient httpClient) *Handler {
 	return &Handler{
-		isReady:   initialReadiness,
-		isHealthy: initialHealth,
-		client:    httpClient,
+		isReady:       initialReadiness,
+		isHealthy:     initialHealth,
+		client:        httpClient,
+		proxyRequests: make(proxyRequests, 0),
 	}
 }
 
@@ -227,6 +229,45 @@ func (h *Handler) makeCall(callRequest callRequest) (*http.Response, error) {
 		return nil, fmt.Errorf("error when creating new request to %s: %s", callRequest.URL, err)
 	}
 	return h.client.Do(request)
+}
+
+// AddProxy will add the proxy settings
+func (h *Handler) AddProxy(c Context) {
+	decoder := json.NewDecoder(c.GetRequestBody())
+	var proxyRequest proxyRequest
+	err := decoder.Decode(&proxyRequest)
+	if err != nil {
+		c.JSON(400, gin.H{"error": fmt.Sprintf("error when decoding request: %s", err.Error())})
+		return
+	}
+	if h.proxyRequests.isPresent(proxyRequest) {
+		c.JSON(400, gin.H{"error": fmt.Sprintf("proxy configuration for url: %s and method: %s is already added", proxyRequest.Path, proxyRequest.Method)})
+		return
+	}
+	h.proxyRequests = append(h.proxyRequests, proxyRequest)
+	c.Status(201)
+}
+
+type proxyRequest struct {
+	Path   string `json:"path"`
+	Method string `json:"method"`
+	Proxy  proxy  `json:"proxy"`
+}
+
+type proxyRequests []proxyRequest
+
+func (ps proxyRequests) isPresent(requestedProxyRequest proxyRequest) bool {
+	for _, p := range ps {
+		if (p.Path == requestedProxyRequest.Path) && (p.Method == requestedProxyRequest.Method) {
+			return true
+		}
+	}
+	return false
+}
+
+type proxy struct {
+	URL    string `json:"url"`
+	Method string `json:"method"`
 }
 
 type callRequest struct {
