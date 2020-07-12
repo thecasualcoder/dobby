@@ -34,6 +34,10 @@ func Bind(root *gin.Engine, server *http.Server, initialHealth, initialReadiness
 			defaultContext := handler.NewDefaultContext(context)
 			h.AddProxy(defaultContext)
 		})
+		root.DELETE("/proxy", func(context *gin.Context) {
+			defaultContext := handler.NewDefaultContext(context)
+			h.DeleteProxy(defaultContext)
+		})
 		root.POST("/call", func(context *gin.Context) {
 			defaultContext := handler.NewDefaultContext(context)
 			h.Call(defaultContext)

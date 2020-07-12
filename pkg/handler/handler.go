@@ -284,6 +284,23 @@ func (h *Handler) AddProxy(c Context) {
 	c.Status(201)
 }
 
+// DeleteProxy will delete the proxy configuration
+func (h *Handler) DeleteProxy(c Context) {
+	decoder := json.NewDecoder(c.GetRequestBody())
+	var proxyRequest proxyRequest
+	err := decoder.Decode(&proxyRequest)
+	if err != nil {
+		c.JSON(400, gin.H{"error": fmt.Sprintf("error when decoding request: %s", err.Error())})
+		return
+	}
+	if h.proxyRequests.isPresent(proxyRequest) {
+		h.proxyRequests = h.proxyRequests.deleteProxy(proxyRequest.Path, proxyRequest.Method)
+		c.JSON(200, gin.H{"result": "deleted the proxy config successfully"})
+		return
+	}
+	c.JSON(404, gin.H{"error": fmt.Sprintf("proxy config with url %s and %s method is not found", proxyRequest.Path, proxyRequest.Method)})
+}
+
 type proxyRequest struct {
 	Path   string `json:"path"`
 	Method string `json:"method"`
@@ -308,6 +325,16 @@ func (ps proxyRequests) getProxy(path string, method string) *proxy {
 		}
 	}
 	return nil
+}
+
+func (ps proxyRequests) deleteProxy(path string, method string) proxyRequests {
+	accProxyRequests := make(proxyRequests, 0, len(ps))
+	for _, p := range ps {
+		if p.Path != path || p.Method != method {
+			accProxyRequests = append(accProxyRequests, p)
+		}
+	}
+	return accProxyRequests
 }
 
 type proxy struct {

@@ -209,3 +209,53 @@ func TestHandler_ProxyRoute(t *testing.T) {
 		handler.ProxyRoute(mockContext)
 	})
 }
+
+func TestHandler_DeleteProxy(t *testing.T) {
+	t.Run("should delete the proxy request if present", func(t *testing.T) {
+		handler := New(true, true, nil)
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+		mockContext := mock.NewMockContext(ctrl)
+		handler.proxyRequests = proxyRequests{proxyRequest{
+			Path:   "/v1/version",
+			Method: "GET",
+		}}
+		stringReader := strings.NewReader(`
+{
+ "path": "/v1/version",
+ "method": "GET"
+}`)
+		mockContext.EXPECT().GetRequestBody().Return(ioutil.NopCloser(stringReader))
+		mockContext.EXPECT().JSON(200, gomock.Any()).Do(func(_ int, data interface{}) {
+			assert.EqualValues(t, "deleted the proxy config successfully", data.(gin.H)["result"])
+		})
+
+		handler.DeleteProxy(mockContext)
+
+		assert.Len(t, handler.proxyRequests, 0)
+	})
+
+	t.Run("should not delete the proxy request if not present", func(t *testing.T) {
+		handler := New(true, true, nil)
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+		mockContext := mock.NewMockContext(ctrl)
+		handler.proxyRequests = proxyRequests{proxyRequest{
+			Path:   "/v1/version",
+			Method: "GET",
+		}}
+		stringReader := strings.NewReader(`
+{
+ "path": "/v2/version",
+ "method": "GET"
+}`)
+		mockContext.EXPECT().GetRequestBody().Return(ioutil.NopCloser(stringReader))
+		mockContext.EXPECT().JSON(404, gomock.Any()).Do(func(_ int, data interface{}) {
+			assert.EqualValues(t, "proxy config with url /v2/version and GET method is not found", data.(gin.H)["error"])
+		})
+
+		handler.DeleteProxy(mockContext)
+
+		assert.Len(t, handler.proxyRequests, 1)
+	})
+}
