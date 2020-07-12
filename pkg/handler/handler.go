@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
 	"strings"
 
@@ -46,10 +47,20 @@ type Context interface {
 	JSON(code int, obj interface{})
 	GetRequestBody() io.ReadCloser
 	Status(code int)
+	GetURI() *url.URL
+	GetMethod() string
 }
 
 type defaultContext struct {
 	ginContext *gin.Context
+}
+
+func (c defaultContext) GetURI() *url.URL {
+	return c.ginContext.Request.URL
+}
+
+func (c defaultContext) GetMethod() string {
+	return c.ginContext.Request.Method
 }
 
 // NewDefaultContext creates the wrapper Context with gin Context
@@ -196,27 +207,7 @@ func (h *Handler) Call(c Context) {
 		c.JSON(400, gin.H{"error": fmt.Sprintf("error when making request to %s: %s", callRequest.URL, err.Error())})
 		return
 	}
-	responseData, err := ioutil.ReadAll(response.Body)
-	if err != nil {
-		c.JSON(400, gin.H{"error": fmt.Sprintf("error when reading response from %s: %s", callRequest.URL, err.Error())})
-		return
-	}
-	if len(responseData) == 0 {
-		c.Status(response.StatusCode)
-		return
-	}
-	responseStr := string(responseData)
-	if strings.HasPrefix(responseStr, "{") || strings.HasPrefix(responseStr, "[") {
-		var res interface{}
-		err = json.Unmarshal(responseData, &res)
-		if err != nil {
-			c.JSON(400, gin.H{"error": fmt.Sprintf("error when decoding response from %s: %s", callRequest.URL, err.Error())})
-			return
-		}
-		c.JSON(response.StatusCode, res)
-		return
-	}
-	c.JSON(response.StatusCode, responseStr)
+	sendResponse(c, response, callRequest.URL)
 }
 
 func (h *Handler) makeCall(callRequest callRequest) (*http.Response, error) {
@@ -229,6 +220,51 @@ func (h *Handler) makeCall(callRequest callRequest) (*http.Response, error) {
 		return nil, fmt.Errorf("error when creating new request to %s: %s", callRequest.URL, err)
 	}
 	return h.client.Do(request)
+}
+
+// ProxyRoute will route to custom route if the route is found in proxyRequests
+// this will be invoked when no standard routes are found in gin
+func (h *Handler) ProxyRoute(c Context) {
+	proxyConfig := h.proxyRequests.getProxy(c.GetURI().Path, c.GetMethod())
+	if proxyConfig == nil {
+		c.Status(404)
+		return
+	}
+	request, err := http.NewRequest(proxyConfig.Method, proxyConfig.URL, nil)
+	if err != nil {
+		c.JSON(400, gin.H{"error": fmt.Sprintf("error when creating request for %s: %v", proxyConfig.URL, err.Error())})
+		return
+	}
+	response, err := h.client.Do(request)
+	if err != nil {
+		c.JSON(400, gin.H{"error": fmt.Sprintf("error when creating request for %s: %s", proxyConfig.URL, proxyConfig.Method)})
+		return
+	}
+	sendResponse(c, response, proxyConfig.URL)
+}
+
+func sendResponse(c Context, response *http.Response, url string) {
+	responseData, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+		c.JSON(400, gin.H{"error": fmt.Sprintf("error when reading response from %s: %s", url, err.Error())})
+		return
+	}
+	if len(responseData) == 0 {
+		c.Status(response.StatusCode)
+		return
+	}
+	responseStr := string(responseData)
+	if strings.HasPrefix(responseStr, "{") || strings.HasPrefix(responseStr, "[") {
+		var res interface{}
+		err = json.Unmarshal(responseData, &res)
+		if err != nil {
+			c.JSON(400, gin.H{"error": fmt.Sprintf("error when decoding response from %s: %s", url, err.Error())})
+			return
+		}
+		c.JSON(response.StatusCode, res)
+		return
+	}
+	c.JSON(response.StatusCode, responseStr)
 }
 
 // AddProxy will add the proxy settings
@@ -263,6 +299,15 @@ func (ps proxyRequests) isPresent(requestedProxyRequest proxyRequest) bool {
 		}
 	}
 	return false
+}
+
+func (ps proxyRequests) getProxy(path string, method string) *proxy {
+	for _, p := range ps {
+		if p.Path == path && p.Method == method {
+			return &p.Proxy
+		}
+	}
+	return nil
 }
 
 type proxy struct {

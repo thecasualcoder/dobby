@@ -8,6 +8,7 @@ import (
 	mock "github.com/thecasualcoder/dobby/internal/mock/handler"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 	"strings"
 	"testing"
 )
@@ -22,8 +23,8 @@ func TestHandler_Call(t *testing.T) {
 
 		stringReader := strings.NewReader(`
 {
- "url": "http://localhost:4444/version",
- "method": "GET"
+  "url": "http://localhost:4444/version",
+  "method": "GET"
 }`)
 		mockContext.EXPECT().GetRequestBody().Return(ioutil.NopCloser(stringReader))
 		httpClient.EXPECT().Do(gomock.Any()).Return(&http.Response{StatusCode: 200, Body: ioutil.NopCloser(strings.NewReader(""))}, nil)
@@ -41,8 +42,8 @@ func TestHandler_Call(t *testing.T) {
 
 		stringReader := strings.NewReader(`
 {
- "url": "http://localhost:4444/version",
- "method": "GET"
+  "url": "http://localhost:4444/version",
+  "method": "GET"
 }`)
 		mockContext.EXPECT().GetRequestBody().Return(ioutil.NopCloser(stringReader))
 		httpClient.EXPECT().Do(gomock.Any()).Return(&http.Response{StatusCode: 200, Body: ioutil.NopCloser(strings.NewReader(`{"version": 1}`))}, nil)
@@ -62,7 +63,7 @@ func TestHandler_Call(t *testing.T) {
 
 		stringReader := strings.NewReader(`
 {
- "url": "http://localhost:4444/notvalid"`)
+  "url": "http://localhost:4444/notvalid"`)
 		mockContext.EXPECT().GetRequestBody().Return(ioutil.NopCloser(stringReader))
 		mockContext.EXPECT().JSON(400, gomock.Any()).Do(func(_ int, data interface{}) {
 			assert.Equal(t, "error when decoding request: unexpected EOF", data.(gin.H)["error"])
@@ -80,7 +81,7 @@ func TestHandler_Call(t *testing.T) {
 
 		stringReader := strings.NewReader(`
 {
- "url": "http://localhost:4444/version"
+  "url": "http://localhost:4444/version"
 }`)
 		mockContext.EXPECT().GetRequestBody().Return(ioutil.NopCloser(stringReader))
 		httpClient.EXPECT().Do(gomock.Any()).Return(nil, fmt.Errorf("error making request"))
@@ -100,7 +101,7 @@ func TestHandler_Call(t *testing.T) {
 
 		stringReader := strings.NewReader(`
 {
- "url": "http://localhost:4444/version"
+  "url": "http://localhost:4444/version"
 }`)
 		mockContext.EXPECT().GetRequestBody().Return(ioutil.NopCloser(stringReader))
 		httpClient.EXPECT().Do(gomock.Any()).Return(&http.Response{StatusCode: 200, Body: ioutil.NopCloser(strings.NewReader("⛅️  +33°C"))}, nil)
@@ -120,12 +121,12 @@ func TestHandler_AddProxy(t *testing.T) {
 		mockContext := mock.NewMockContext(ctrl)
 		stringReader := strings.NewReader(`
 {
-  "path": "/v1/version",
-  "method": "GET",
-  "proxy": {
-    "url": "http://dobby2/version",
-    "method": "GET"
-  }
+ "path": "/v1/version",
+ "method": "GET",
+ "proxy": {
+   "url": "http://dobby2/version",
+   "method": "GET"
+ }
 }`)
 		mockContext.EXPECT().GetRequestBody().Return(ioutil.NopCloser(stringReader))
 		mockContext.EXPECT().Status(201)
@@ -154,8 +155,8 @@ func TestHandler_AddProxy(t *testing.T) {
 		mockContext := mock.NewMockContext(ctrl)
 		stringReader := strings.NewReader(`
 {
-  "path": "/v1/version",
-  "method": "GET"
+ "path": "/v1/version",
+ "method": "GET"
 }`)
 
 		mockContext.EXPECT().GetRequestBody().Return(ioutil.NopCloser(stringReader))
@@ -171,5 +172,40 @@ func TestHandler_AddProxy(t *testing.T) {
 			Method: "GET",
 		}
 		assert.Equal(t, expectedProxyRequest, handler.proxyRequests[0])
+	})
+}
+
+func TestHandler_ProxyRoute(t *testing.T) {
+	t.Run("should proxy request to destination path if it is configured", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+		mockContext := mock.NewMockContext(ctrl)
+		client := mock.NewMockhttpClient(ctrl)
+
+		handler := New(true, true, client)
+		handler.proxyRequests = proxyRequests{proxyRequest{
+			Path:   "/v1/version",
+			Method: "GET",
+		}}
+
+		mockContext.EXPECT().GetURI().Return(&url.URL{Path: "/v1/version"})
+		mockContext.EXPECT().GetMethod().Return("GET")
+		mockContext.EXPECT().Status(200)
+		client.EXPECT().Do(gomock.Any()).Return(&http.Response{StatusCode: 200, Body: ioutil.NopCloser(strings.NewReader(""))}, nil)
+
+		handler.ProxyRoute(mockContext)
+	})
+
+	t.Run("should return 404 if proxy is not configured", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+		mockContext := mock.NewMockContext(ctrl)
+
+		handler := New(true, true, nil)
+		mockContext.EXPECT().GetURI().Return(&url.URL{Path: "/v1/version"})
+		mockContext.EXPECT().GetMethod().Return("GET")
+		mockContext.EXPECT().Status(404)
+
+		handler.ProxyRoute(mockContext)
 	})
 }

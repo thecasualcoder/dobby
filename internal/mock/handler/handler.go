@@ -8,6 +8,7 @@ import (
 	gomock "github.com/golang/mock/gomock"
 	io "io"
 	http "net/http"
+	url "net/url"
 	reflect "reflect"
 )
 
@@ -108,4 +109,32 @@ func (m *MockContext) Status(code int) {
 func (mr *MockContextMockRecorder) Status(code interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Status", reflect.TypeOf((*MockContext)(nil).Status), code)
+}
+
+// GetURI mocks base method
+func (m *MockContext) GetURI() *url.URL {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetURI")
+	ret0, _ := ret[0].(*url.URL)
+	return ret0
+}
+
+// GetURI indicates an expected call of GetURI
+func (mr *MockContextMockRecorder) GetURI() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetURI", reflect.TypeOf((*MockContext)(nil).GetURI))
+}
+
+// GetMethod mocks base method
+func (m *MockContext) GetMethod() string {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetMethod")
+	ret0, _ := ret[0].(string)
+	return ret0
+}
+
+// GetMethod indicates an expected call of GetMethod
+func (mr *MockContextMockRecorder) GetMethod() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMethod", reflect.TypeOf((*MockContext)(nil).GetMethod))
 }

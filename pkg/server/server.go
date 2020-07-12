@@ -49,4 +49,8 @@ func Bind(root *gin.Engine, server *http.Server, initialHealth, initialReadiness
 		controlGroup.PUT("/goturbo/cpu", handler.GoTurboCPU)
 		controlGroup.PUT("/crash", handler.Crash(server))
 	}
+	root.NoRoute(func(context *gin.Context) {
+		defaultContext := handler.NewDefaultContext(context)
+		h.ProxyRoute(defaultContext)
+	})
 }
