@@ -1,10 +1,16 @@
 package handler
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
+	"io"
+	"io/ioutil"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/thecasualcoder/dobby/pkg/config"
@@ -13,18 +19,65 @@ import (
 	"time"
 )
 
-// Handler is provides HandlerFunc for Gin context
+// Handler is provides HandlerFunc for Gin Context
 type Handler struct {
-	isHealthy bool
-	isReady   bool
+	isHealthy     bool
+	isReady       bool
+	client        httpClient
+	proxyRequests proxyRequests
+}
+
+type httpClient interface {
+	Do(req *http.Request) (*http.Response, error)
 }
 
 // New creates a new Handler
-func New(initialHealth, initialReadiness bool) *Handler {
+func New(initialHealth, initialReadiness bool, httpClient httpClient) *Handler {
 	return &Handler{
-		isReady:   initialReadiness,
-		isHealthy: initialHealth,
+		isReady:       initialReadiness,
+		isHealthy:     initialHealth,
+		client:        httpClient,
+		proxyRequests: make(proxyRequests, 0),
 	}
+}
+
+// Context is the interface represents the minimalistic gin.Context
+// this is used to create mock struct while testing
+type Context interface {
+	JSON(code int, obj interface{})
+	GetRequestBody() io.ReadCloser
+	Status(code int)
+	GetURI() *url.URL
+	GetMethod() string
+}
+
+type defaultContext struct {
+	ginContext *gin.Context
+}
+
+func (c defaultContext) GetURI() *url.URL {
+	return c.ginContext.Request.URL
+}
+
+func (c defaultContext) GetMethod() string {
+	return c.ginContext.Request.Method
+}
+
+// NewDefaultContext creates the wrapper Context with gin Context
+func NewDefaultContext(c *gin.Context) Context {
+	return defaultContext{ginContext: c}
+}
+
+func (c defaultContext) Status(code int) {
+	c.ginContext.Status(code)
+}
+
+func (c defaultContext) JSON(code int, obj interface{}) {
+	c.ginContext.JSON(code, obj)
+}
+
+func (c defaultContext) GetRequestBody() io.ReadCloser {
+	return c.ginContext.Request.Body
 }
 
 // Health return the dobby health status
@@ -138,6 +191,161 @@ func (h *Handler) MakeReadySick(c *gin.Context) {
 		h.isReady = true
 	})
 	c.JSON(200, gin.H{"status": "success"})
+}
+
+// Call another service and send the response
+func (h *Handler) Call(c Context) {
+	decoder := json.NewDecoder(c.GetRequestBody())
+	var callRequest callRequest
+	err := decoder.Decode(&callRequest)
+	if err != nil {
+		c.JSON(400, gin.H{"error": fmt.Sprintf("error when decoding request: %s", err.Error())})
+		return
+	}
+	response, err := h.makeCall(callRequest)
+	if err != nil {
+		c.JSON(400, gin.H{"error": fmt.Sprintf("error when making request to %s: %s", callRequest.URL, err.Error())})
+		return
+	}
+	sendResponse(c, response, callRequest.URL)
+}
+
+func (h *Handler) makeCall(callRequest callRequest) (*http.Response, error) {
+	marshal, err := json.Marshal(callRequest.Body)
+	if err != nil {
+		return nil, fmt.Errorf("error when marshalling request body: %s", err)
+	}
+	request, err := http.NewRequest(callRequest.Method, callRequest.URL, bytes.NewBuffer(marshal))
+	if err != nil {
+		return nil, fmt.Errorf("error when creating new request to %s: %s", callRequest.URL, err)
+	}
+	return h.client.Do(request)
+}
+
+// ProxyRoute will route to custom route if the route is found in proxyRequests
+// this will be invoked when no standard routes are found in gin
+func (h *Handler) ProxyRoute(c Context) {
+	proxyConfig := h.proxyRequests.getProxy(c.GetURI().Path, c.GetMethod())
+	if proxyConfig == nil {
+		c.Status(404)
+		return
+	}
+	request, err := http.NewRequest(proxyConfig.Method, proxyConfig.URL, nil)
+	if err != nil {
+		c.JSON(400, gin.H{"error": fmt.Sprintf("error when creating request for %s: %v", proxyConfig.URL, err.Error())})
+		return
+	}
+	response, err := h.client.Do(request)
+	if err != nil {
+		c.JSON(400, gin.H{"error": fmt.Sprintf("error when creating request for %s: %s", proxyConfig.URL, proxyConfig.Method)})
+		return
+	}
+	sendResponse(c, response, proxyConfig.URL)
+}
+
+func sendResponse(c Context, response *http.Response, url string) {
+	responseData, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+		c.JSON(400, gin.H{"error": fmt.Sprintf("error when reading response from %s: %s", url, err.Error())})
+		return
+	}
+	if len(responseData) == 0 {
+		c.Status(response.StatusCode)
+		return
+	}
+	responseStr := string(responseData)
+	if strings.HasPrefix(responseStr, "{") || strings.HasPrefix(responseStr, "[") {
+		var res interface{}
+		err = json.Unmarshal(responseData, &res)
+		if err != nil {
+			c.JSON(400, gin.H{"error": fmt.Sprintf("error when decoding response from %s: %s", url, err.Error())})
+			return
+		}
+		c.JSON(response.StatusCode, res)
+		return
+	}
+	c.JSON(response.StatusCode, responseStr)
+}
+
+// AddProxy will add the proxy settings
+func (h *Handler) AddProxy(c Context) {
+	decoder := json.NewDecoder(c.GetRequestBody())
+	var proxyRequest proxyRequest
+	err := decoder.Decode(&proxyRequest)
+	if err != nil {
+		c.JSON(400, gin.H{"error": fmt.Sprintf("error when decoding request: %s", err.Error())})
+		return
+	}
+	if h.proxyRequests.isPresent(proxyRequest) {
+		c.JSON(400, gin.H{"error": fmt.Sprintf("proxy configuration for url: %s and method: %s is already added", proxyRequest.Path, proxyRequest.Method)})
+		return
+	}
+	h.proxyRequests = append(h.proxyRequests, proxyRequest)
+	c.Status(201)
+}
+
+// DeleteProxy will delete the proxy configuration
+func (h *Handler) DeleteProxy(c Context) {
+	decoder := json.NewDecoder(c.GetRequestBody())
+	var proxyRequest proxyRequest
+	err := decoder.Decode(&proxyRequest)
+	if err != nil {
+		c.JSON(400, gin.H{"error": fmt.Sprintf("error when decoding request: %s", err.Error())})
+		return
+	}
+	if h.proxyRequests.isPresent(proxyRequest) {
+		h.proxyRequests = h.proxyRequests.deleteProxy(proxyRequest.Path, proxyRequest.Method)
+		c.JSON(200, gin.H{"result": "deleted the proxy config successfully"})
+		return
+	}
+	c.JSON(404, gin.H{"error": fmt.Sprintf("proxy config with url %s and %s method is not found", proxyRequest.Path, proxyRequest.Method)})
+}
+
+type proxyRequest struct {
+	Path   string `json:"path"`
+	Method string `json:"method"`
+	Proxy  proxy  `json:"proxy"`
+}
+
+type proxyRequests []proxyRequest
+
+func (ps proxyRequests) isPresent(requestedProxyRequest proxyRequest) bool {
+	for _, p := range ps {
+		if (p.Path == requestedProxyRequest.Path) && (p.Method == requestedProxyRequest.Method) {
+			return true
+		}
+	}
+	return false
+}
+
+func (ps proxyRequests) getProxy(path string, method string) *proxy {
+	for _, p := range ps {
+		if p.Path == path && p.Method == method {
+			return &p.Proxy
+		}
+	}
+	return nil
+}
+
+func (ps proxyRequests) deleteProxy(path string, method string) proxyRequests {
+	accProxyRequests := make(proxyRequests, 0, len(ps))
+	for _, p := range ps {
+		if p.Path != path || p.Method != method {
+			accProxyRequests = append(accProxyRequests, p)
+		}
+	}
+	return accProxyRequests
+}
+
+type proxy struct {
+	URL    string `json:"url"`
+	Method string `json:"method"`
+}
+
+type callRequest struct {
+	URL    string      `json:"url"`
+	Method string      `json:"method"`
+	Body   interface{} `json:"body"`
 }
 
 // Crash will make dobby to kill itself

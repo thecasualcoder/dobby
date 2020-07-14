@@ -88,6 +88,13 @@ You can order dobby to
 
   `PUT /control/crash` which will crash the server
 
+- call another service
+
+   ```sh
+   POST /call -d '{"url": "http://httpbin.org/get", "method": "GET"}' will make a get request to http://httpbin.org/get
+   POST /call -d '{"url": "http://httpbin.org/post", "method": "POST", "body": "{key: value}"}' will make a post request to http://httpbin.org/post
+   ```
+
 ## Run
 
 ### Configurations
