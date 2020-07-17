@@ -1,0 +1,8 @@
+{
+  "path": "/payment",
+  "method": "GET",
+  "proxy": {
+    "url": "http://wttr.in/chennai?format=1",
+    "method": "GET"
+  }
+}

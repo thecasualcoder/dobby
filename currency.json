@@ -1,0 +1,8 @@
+{
+  "path": "/currency",
+  "method": "GET",
+  "proxy": {
+    "url": "http://payment/payment",
+    "method": "GET"
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "path": "/",
+  "method": "GET",
+  "proxy": {
+    "url": "http://checkout/checkout",
+    "method": "GET"
+  }
+}

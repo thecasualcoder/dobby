@@ -1,0 +1,8 @@
+{
+  "path": "/checkout",
+  "method": "GET",
+  "proxy": {
+    "url": "http://currency/currency",
+    "method": "GET"
+  }
+}
