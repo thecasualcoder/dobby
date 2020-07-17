@@ -3,35 +3,34 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
-    app: dobby
-  name: dobby
+    app: payment
+  name: payment
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: dobby
+      app: payment
   template:
     metadata:
       labels:
-        app: dobby
+        app: payment
     spec:
       containers:
-      - image: dineshba/endgame:latest
+      - image: dineshba/dobby:latest
         imagePullPolicy: Always
-        name: dobby
+        name: payment
 ---
 apiVersion: v1
 kind: Service
 metadata:
   labels:
-    app: dobby
-  name: dobby
+    app: payment
+  name: payment
 spec:
   ports:
-  - nodePort: 32223
-    port: 80
+  - port: 80
     protocol: TCP
     targetPort: 4444
   selector:
-    app: dobby
-  type: NodePort
+    app: payment
+  type: ClusterIP

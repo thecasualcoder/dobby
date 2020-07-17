@@ -23,13 +23,25 @@ spec:
     }
 
     environment {
-        registry = "dineshba/endgame"
+        registry = "dineshba/dobby"
         registryCredential = 'dockerhub'
         dockerImage = ""
     }
 
     stages {
-        stage('Validations') {
+
+        stage('Lint') {
+            steps {
+                container('golang') {
+                    script {
+                        sh "go get -u golang.org/x/lint/golint"
+                        sh "make lint-all"
+                    }
+                }
+            }
+        }
+
+        stage('Tests') {
             steps {
                 container('golang') {
                     script {
@@ -65,7 +77,11 @@ spec:
         stage('Deploy App') {
              steps {
                 script {
-                    kubernetesDeploy(configs: "dobby.yaml", kubeconfigId: "mykubeconfig")
+                    kubernetesDeploy(configs: "frontend.yaml", kubeconfigId: "mykubeconfig")
+                    kubernetesDeploy(configs: "checkout.yaml", kubeconfigId: "mykubeconfig")
+                    kubernetesDeploy(configs: "payment.yaml", kubeconfigId: "mykubeconfig")
+                    kubernetesDeploy(configs: "email.yaml", kubeconfigId: "mykubeconfig")
+                    kubernetesDeploy(configs: "currency.yaml", kubeconfigId: "mykubeconfig")
                 }
             }
         }
