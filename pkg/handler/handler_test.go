@@ -114,7 +114,7 @@ func TestHandler_Call(t *testing.T) {
 }
 
 func TestHandler_AddProxy(t *testing.T) {
-	t.Run("should add the proxy request to handler", func(t *testing.T) {
+	t.Run("should add the Proxy request to handler", func(t *testing.T) {
 		handler := New(true, true, nil)
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
@@ -123,7 +123,7 @@ func TestHandler_AddProxy(t *testing.T) {
 {
  "path": "/v1/version",
  "method": "GET",
- "proxy": {
+ "Proxy": {
    "url": "http://dobby2/version",
    "method": "GET"
  }
@@ -134,9 +134,9 @@ func TestHandler_AddProxy(t *testing.T) {
 		handler.AddProxy(mockContext)
 
 		assert.Len(t, handler.proxyRequests, 1)
-		expectedProxyRequest := proxyRequest{
+		expectedProxyRequest := ProxyRequest{
 			Path:   "/v1/version",
-			Method: "GET", Proxy: proxy{
+			Method: "GET", Proxy: Proxy{
 				URL:    "http://dobby2/version",
 				Method: "GET",
 			},
@@ -144,9 +144,9 @@ func TestHandler_AddProxy(t *testing.T) {
 		assert.Equal(t, expectedProxyRequest, handler.proxyRequests[0])
 	})
 
-	t.Run("should not add the proxy request if the same url and same method is added", func(t *testing.T) {
+	t.Run("should not add the Proxy request if the same url and same method is added", func(t *testing.T) {
 		handler := New(true, true, nil)
-		handler.proxyRequests = proxyRequests{proxyRequest{
+		handler.proxyRequests = ProxyRequests{ProxyRequest{
 			Path:   "/v1/version",
 			Method: "GET",
 		}}
@@ -161,13 +161,13 @@ func TestHandler_AddProxy(t *testing.T) {
 
 		mockContext.EXPECT().GetRequestBody().Return(ioutil.NopCloser(stringReader))
 		mockContext.EXPECT().JSON(400, gomock.Any()).Do(func(_ int, data interface{}) {
-			assert.EqualValues(t, "proxy configuration for url: /v1/version and method: GET is already added", data.(gin.H)["error"])
+			assert.EqualValues(t, "Proxy configuration for url: /v1/version and method: GET is already added", data.(gin.H)["error"])
 		})
 
 		handler.AddProxy(mockContext)
 
 		assert.Len(t, handler.proxyRequests, 1)
-		expectedProxyRequest := proxyRequest{
+		expectedProxyRequest := ProxyRequest{
 			Path:   "/v1/version",
 			Method: "GET",
 		}
@@ -176,14 +176,14 @@ func TestHandler_AddProxy(t *testing.T) {
 }
 
 func TestHandler_ProxyRoute(t *testing.T) {
-	t.Run("should proxy request to destination path if it is configured", func(t *testing.T) {
+	t.Run("should Proxy request to destination path if it is configured", func(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 		mockContext := mock.NewMockContext(ctrl)
 		client := mock.NewMockhttpClient(ctrl)
 
 		handler := New(true, true, client)
-		handler.proxyRequests = proxyRequests{proxyRequest{
+		handler.proxyRequests = ProxyRequests{ProxyRequest{
 			Path:   "/v1/version",
 			Method: "GET",
 		}}
@@ -196,7 +196,7 @@ func TestHandler_ProxyRoute(t *testing.T) {
 		handler.ProxyRoute(mockContext)
 	})
 
-	t.Run("should return 404 if proxy is not configured", func(t *testing.T) {
+	t.Run("should return 404 if Proxy is not configured", func(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 		mockContext := mock.NewMockContext(ctrl)
@@ -211,12 +211,12 @@ func TestHandler_ProxyRoute(t *testing.T) {
 }
 
 func TestHandler_DeleteProxy(t *testing.T) {
-	t.Run("should delete the proxy request if present", func(t *testing.T) {
+	t.Run("should delete the Proxy request if present", func(t *testing.T) {
 		handler := New(true, true, nil)
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 		mockContext := mock.NewMockContext(ctrl)
-		handler.proxyRequests = proxyRequests{proxyRequest{
+		handler.proxyRequests = ProxyRequests{ProxyRequest{
 			Path:   "/v1/version",
 			Method: "GET",
 		}}
@@ -227,7 +227,7 @@ func TestHandler_DeleteProxy(t *testing.T) {
 }`)
 		mockContext.EXPECT().GetRequestBody().Return(ioutil.NopCloser(stringReader))
 		mockContext.EXPECT().JSON(200, gomock.Any()).Do(func(_ int, data interface{}) {
-			assert.EqualValues(t, "deleted the proxy config successfully", data.(gin.H)["result"])
+			assert.EqualValues(t, "deleted the Proxy config successfully", data.(gin.H)["result"])
 		})
 
 		handler.DeleteProxy(mockContext)
@@ -235,12 +235,12 @@ func TestHandler_DeleteProxy(t *testing.T) {
 		assert.Len(t, handler.proxyRequests, 0)
 	})
 
-	t.Run("should not delete the proxy request if not present", func(t *testing.T) {
+	t.Run("should not delete the Proxy request if not present", func(t *testing.T) {
 		handler := New(true, true, nil)
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 		mockContext := mock.NewMockContext(ctrl)
-		handler.proxyRequests = proxyRequests{proxyRequest{
+		handler.proxyRequests = ProxyRequests{ProxyRequest{
 			Path:   "/v1/version",
 			Method: "GET",
 		}}
@@ -251,7 +251,7 @@ func TestHandler_DeleteProxy(t *testing.T) {
 }`)
 		mockContext.EXPECT().GetRequestBody().Return(ioutil.NopCloser(stringReader))
 		mockContext.EXPECT().JSON(404, gomock.Any()).Do(func(_ int, data interface{}) {
-			assert.EqualValues(t, "proxy config with url /v2/version and GET method is not found", data.(gin.H)["error"])
+			assert.EqualValues(t, "Proxy config with url /v2/version and GET method is not found", data.(gin.H)["error"])
 		})
 
 		handler.DeleteProxy(mockContext)

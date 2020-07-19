@@ -4,18 +4,17 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/gin-gonic/gin"
+	"github.com/thecasualcoder/dobby/pkg/config"
+	"github.com/thecasualcoder/dobby/pkg/utils"
+	"gopkg.in/yaml.v2"
 	"io"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"net/url"
 	"os"
-	"strings"
-
-	"github.com/gin-gonic/gin"
-	"github.com/thecasualcoder/dobby/pkg/config"
-	"github.com/thecasualcoder/dobby/pkg/utils"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -24,7 +23,7 @@ type Handler struct {
 	isHealthy     bool
 	isReady       bool
 	client        httpClient
-	proxyRequests proxyRequests
+	proxyRequests ProxyRequests
 }
 
 type httpClient interface {
@@ -37,15 +36,18 @@ func New(initialHealth, initialReadiness bool, httpClient httpClient) *Handler {
 		isReady:       initialReadiness,
 		isHealthy:     initialHealth,
 		client:        httpClient,
-		proxyRequests: make(proxyRequests, 0),
+		proxyRequests: make(ProxyRequests, 0),
 	}
 }
 
 // Context is the interface represents the minimalistic gin.Context
 // this is used to create mock struct while testing
 type Context interface {
+	Header(key, value string)
+	Data(code int, contentType string, data []byte)
 	JSON(code int, obj interface{})
 	GetRequestBody() io.ReadCloser
+	GetRequestHeader() http.Header
 	Status(code int)
 	GetURI() *url.URL
 	GetMethod() string
@@ -53,6 +55,18 @@ type Context interface {
 
 type defaultContext struct {
 	ginContext *gin.Context
+}
+
+func (c defaultContext) GetRequestHeader() http.Header {
+	return c.ginContext.Request.Header
+}
+
+func (c defaultContext) Header(key, value string) {
+	c.ginContext.Header(key, value)
+}
+
+func (c defaultContext) Data(code int, contentType string, data []byte) {
+	c.ginContext.Data(code, contentType, data)
 }
 
 func (c defaultContext) GetURI() *url.URL {
@@ -222,10 +236,17 @@ func (h *Handler) makeCall(callRequest callRequest) (*http.Response, error) {
 	return h.client.Do(request)
 }
 
-// ProxyRoute will route to custom route if the route is found in proxyRequests
+// ProxyRoute will route to custom route if the route is found in ProxyRequests
 // this will be invoked when no standard routes are found in gin
 func (h *Handler) ProxyRoute(c Context) {
-	proxyConfig := h.proxyRequests.getProxy(c.GetURI().Path, c.GetMethod())
+	requestPath := c.GetURI().Path
+	requestMethod := c.GetMethod()
+
+	proxyConfig := h.proxyRequests.getProxy(requestPath, requestMethod)
+	if proxyConfig == nil {
+		proxyConfig = GetDynamicProxy(requestPath, requestMethod)
+	}
+
 	if proxyConfig == nil {
 		c.Status(404)
 		return
@@ -234,6 +255,10 @@ func (h *Handler) ProxyRoute(c Context) {
 	if err != nil {
 		c.JSON(400, gin.H{"error": fmt.Sprintf("error when creating request for %s: %v", proxyConfig.URL, err.Error())})
 		return
+	}
+
+	for key, values := range c.GetRequestHeader() {
+		request.Header.Set(key, strings.Trim(strings.Join(values, "; "), "; "))
 	}
 	response, err := h.client.Do(request)
 	if err != nil {
@@ -244,50 +269,35 @@ func (h *Handler) ProxyRoute(c Context) {
 }
 
 func sendResponse(c Context, response *http.Response, url string) {
-	responseData, err := ioutil.ReadAll(response.Body)
-	if err != nil {
-		c.JSON(400, gin.H{"error": fmt.Sprintf("error when reading response from %s: %s", url, err.Error())})
-		return
+	for key, values := range response.Header {
+		c.Header(key, strings.Trim(strings.Join(values, "; "), "; "))
 	}
-	if len(responseData) == 0 {
-		c.Status(response.StatusCode)
-		return
-	}
-	responseStr := string(responseData)
-	if strings.HasPrefix(responseStr, "{") || strings.HasPrefix(responseStr, "[") {
-		var res interface{}
-		err = json.Unmarshal(responseData, &res)
-		if err != nil {
-			c.JSON(400, gin.H{"error": fmt.Sprintf("error when decoding response from %s: %s", url, err.Error())})
-			return
-		}
-		c.JSON(response.StatusCode, res)
-		return
-	}
-	c.JSON(response.StatusCode, responseStr)
+	w := bytes.Buffer{}
+	_, _ = io.Copy(&w, response.Body)
+	c.Data(response.StatusCode, response.Header.Get("Content-Type"), w.Bytes())
 }
 
-// AddProxy will add the proxy settings
+// AddProxy will add the Proxy settings
 func (h *Handler) AddProxy(c Context) {
 	decoder := json.NewDecoder(c.GetRequestBody())
-	var proxyRequest proxyRequest
+	var proxyRequest ProxyRequest
 	err := decoder.Decode(&proxyRequest)
 	if err != nil {
 		c.JSON(400, gin.H{"error": fmt.Sprintf("error when decoding request: %s", err.Error())})
 		return
 	}
 	if h.proxyRequests.isPresent(proxyRequest) {
-		c.JSON(400, gin.H{"error": fmt.Sprintf("proxy configuration for url: %s and method: %s is already added", proxyRequest.Path, proxyRequest.Method)})
+		c.JSON(400, gin.H{"error": fmt.Sprintf("Proxy configuration for url: %s and method: %s is already added", proxyRequest.Path, proxyRequest.Method)})
 		return
 	}
 	h.proxyRequests = append(h.proxyRequests, proxyRequest)
 	c.Status(201)
 }
 
-// DeleteProxy will delete the proxy configuration
+// DeleteProxy will delete the Proxy configuration
 func (h *Handler) DeleteProxy(c Context) {
 	decoder := json.NewDecoder(c.GetRequestBody())
-	var proxyRequest proxyRequest
+	var proxyRequest ProxyRequest
 	err := decoder.Decode(&proxyRequest)
 	if err != nil {
 		c.JSON(400, gin.H{"error": fmt.Sprintf("error when decoding request: %s", err.Error())})
@@ -295,21 +305,34 @@ func (h *Handler) DeleteProxy(c Context) {
 	}
 	if h.proxyRequests.isPresent(proxyRequest) {
 		h.proxyRequests = h.proxyRequests.deleteProxy(proxyRequest.Path, proxyRequest.Method)
-		c.JSON(200, gin.H{"result": "deleted the proxy config successfully"})
+		c.JSON(200, gin.H{"result": "deleted the Proxy config successfully"})
 		return
 	}
-	c.JSON(404, gin.H{"error": fmt.Sprintf("proxy config with url %s and %s method is not found", proxyRequest.Path, proxyRequest.Method)})
+	c.JSON(404, gin.H{"error": fmt.Sprintf("Proxy config with url %s and %s method is not found", proxyRequest.Path, proxyRequest.Method)})
 }
 
-type proxyRequest struct {
-	Path   string `json:"path"`
-	Method string `json:"method"`
-	Proxy  proxy  `json:"proxy"`
+// ProxyRequest represent a Proxy request
+type ProxyRequest struct {
+	Path   string `json:"path" yaml:"path"`
+	Method string `json:"method" yaml:"method"`
+	Proxy  Proxy  `json:"Proxy" yaml:"proxy"`
 }
 
-type proxyRequests []proxyRequest
+// ProxyRequests represents collection of Proxy requests
+type ProxyRequests []ProxyRequest
 
-func (ps proxyRequests) isPresent(requestedProxyRequest proxyRequest) bool {
+// NewProxyRequests represents
+func NewProxyRequests(data []byte) (ProxyRequests, error) {
+	var result = ProxyRequests{}
+	err := yaml.Unmarshal(data, &result)
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
+}
+
+func (ps ProxyRequests) isPresent(requestedProxyRequest ProxyRequest) bool {
 	for _, p := range ps {
 		if (p.Path == requestedProxyRequest.Path) && (p.Method == requestedProxyRequest.Method) {
 			return true
@@ -318,7 +341,7 @@ func (ps proxyRequests) isPresent(requestedProxyRequest proxyRequest) bool {
 	return false
 }
 
-func (ps proxyRequests) getProxy(path string, method string) *proxy {
+func (ps ProxyRequests) getProxy(path string, method string) *Proxy {
 	for _, p := range ps {
 		if p.Path == path && p.Method == method {
 			return &p.Proxy
@@ -327,8 +350,8 @@ func (ps proxyRequests) getProxy(path string, method string) *proxy {
 	return nil
 }
 
-func (ps proxyRequests) deleteProxy(path string, method string) proxyRequests {
-	accProxyRequests := make(proxyRequests, 0, len(ps))
+func (ps ProxyRequests) deleteProxy(path string, method string) ProxyRequests {
+	accProxyRequests := make(ProxyRequests, 0, len(ps))
 	for _, p := range ps {
 		if p.Path != path || p.Method != method {
 			accProxyRequests = append(accProxyRequests, p)
@@ -337,9 +360,10 @@ func (ps proxyRequests) deleteProxy(path string, method string) proxyRequests {
 	return accProxyRequests
 }
 
-type proxy struct {
-	URL    string `json:"url"`
-	Method string `json:"method"`
+// Proxy represents a proxy request
+type Proxy struct {
+	URL    string `json:"url" yaml:"url"`
+	Method string `json:"method" yaml:"method"`
 }
 
 type callRequest struct {
