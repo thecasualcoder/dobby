@@ -17,7 +17,7 @@ func main() {
 	docs.SwaggerInfo.Title = "Dobby"
 	docs.SwaggerInfo.Description = "dobby is free and will serve your orders."
 	docs.SwaggerInfo.Version = config.BuildVersion()
-	docs.SwaggerInfo.Schemes = []string{"http"}
+	docs.SwaggerInfo.Schemes = []string{"http", "https"}
 
 	err := cmd.Run(os.Args)
 	if err != nil {
