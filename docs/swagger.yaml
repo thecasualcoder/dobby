@@ -1,0 +1,146 @@
+definitions:
+  model.Error:
+    properties:
+      error:
+        example: something went wrong
+        type: string
+    type: object
+  model.Health:
+    properties:
+      healthy:
+        type: boolean
+    type: object
+  model.Metadata:
+    properties:
+      hostname:
+        example: dobby
+        type: string
+      ip:
+        example: 192.168.1.100
+        type: string
+    type: object
+  model.Ready:
+    properties:
+      ready:
+        type: boolean
+    type: object
+  model.Version:
+    properties:
+      version:
+        example: 1.0.0
+        type: string
+    type: object
+info:
+  contact: {}
+  license: {}
+paths:
+  /health:
+    get:
+      consumes:
+      - application/json
+      description: Get Dobby's health status
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Health'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/model.Health'
+      summary: Dobby Health
+      tags:
+      - Status
+  /meta:
+    get:
+      consumes:
+      - application/json
+      description: Get Dobby's metadata
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Metadata'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/model.Error'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/model.Error'
+      summary: Dobby Metadata
+      tags:
+      - Status
+  /ready:
+    get:
+      consumes:
+      - application/json
+      description: Get Dobby's readiness
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Ready'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/model.Ready'
+      summary: Dobby Ready
+      tags:
+      - Status
+  /return/{statusCode}:
+    get:
+      consumes:
+      - application/json
+      description: Ask Dobby to return the status code sent by the client
+      parameters:
+      - description: Status Code - E.g. 200
+        in: path
+        name: statusCode
+        required: true
+        type: integer
+      - description: Dela(milliseconds) - E.g. 1000
+        in: query
+        name: delay
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/model.Error'
+      summary: Repeat Status
+      tags:
+      - Status
+  /version:
+    get:
+      consumes:
+      - application/json
+      description: Get Dobby's version
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Version'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/model.Error'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/model.Error'
+      summary: Dobby Version
+      tags:
+      - Status
+swagger: "2.0"

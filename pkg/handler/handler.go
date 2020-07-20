@@ -12,11 +12,13 @@ import (
 	"os"
 	"strings"
 
-	"github.com/gin-gonic/gin"
-	"github.com/thecasualcoder/dobby/pkg/config"
-	"github.com/thecasualcoder/dobby/pkg/utils"
 	"strconv"
 	"time"
+
+	"github.com/gin-gonic/gin"
+	"github.com/thecasualcoder/dobby/pkg/config"
+	"github.com/thecasualcoder/dobby/pkg/model"
+	"github.com/thecasualcoder/dobby/pkg/utils"
 )
 
 // Handler is provides HandlerFunc for Gin Context
@@ -81,31 +83,56 @@ func (c defaultContext) GetRequestBody() io.ReadCloser {
 }
 
 // Health return the dobby health status
+// @Summary Dobby Health
+// @Description Get Dobby's health status
+// @Tags Status
+// @Accept json
+// @Produce json
+// @Success 200 {object} model.Health
+// @Failure 500 {object} model.Health
+// @Router /health [get]
 func (h *Handler) Health(c *gin.Context) {
 	statusCode := http.StatusOK
 	if !h.isHealthy {
 		statusCode = http.StatusInternalServerError
 	}
-	c.JSON(statusCode, gin.H{"healthy": h.isHealthy})
+	c.JSON(statusCode, model.Health{Healthy: h.isHealthy})
 }
 
 // Ready return the dobby health status
+// @Summary Dobby Ready
+// @Description Get Dobby's readiness
+// @Tags Status
+// @Accept json
+// @Produce json
+// @Success 200 {object} model.Ready
+// @Failure 503 {object} model.Ready
+// @Router /ready [get]
 func (h *Handler) Ready(c *gin.Context) {
 	statusCode := http.StatusOK
 	if !h.isReady {
 		statusCode = http.StatusServiceUnavailable
 	}
-	c.JSON(statusCode, gin.H{"ready": h.isReady})
+	c.JSON(statusCode, model.Ready{Ready: h.isReady})
 }
 
 // Version return dobby version
+// @Summary Dobby Version
+// @Description Get Dobby's version
+// @Tags Status
+// @Accept json
+// @Produce json
+// @Success 200 {object} model.Version
+// @Failure 503 {object} model.Error
+// @Failure 500 {object} model.Error
+// @Router /version [get]
 func (h *Handler) Version(c *gin.Context) {
 	if !h.isReady {
-		c.JSON(http.StatusServiceUnavailable, gin.H{"error": "application is not ready"})
+		c.JSON(http.StatusServiceUnavailable, model.Error{Error: "application is not ready"})
 		return
 	}
 	if !h.isHealthy {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "application is not healthy"})
+		c.JSON(http.StatusInternalServerError, model.Error{Error: "application is not healthy"})
 		return
 	}
 
@@ -114,40 +141,64 @@ func (h *Handler) Version(c *gin.Context) {
 	if envVersion != "" {
 		version = envVersion
 	}
-	c.JSON(200, gin.H{"version": version})
+	c.JSON(200, model.Version{Version: version})
 }
 
 // Meta return dobby's metadata
+// @Summary Dobby Metadata
+// @Description Get Dobby's metadata
+// @Tags Status
+// @Accept json
+// @Produce json
+// @Success 200 {object} model.Metadata
+// @Failure 503 {object} model.Error
+// @Failure 500 {object} model.Error
+// @Router /meta [get]
 func (h *Handler) Meta(c *gin.Context) {
 	if !h.isReady {
-		c.JSON(http.StatusServiceUnavailable, gin.H{"error": "application is not ready"})
+		c.JSON(http.StatusServiceUnavailable, model.Error{Error: "application is not ready"})
 		return
 	}
 	if !h.isHealthy {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "application is not healthy"})
+		c.JSON(http.StatusInternalServerError, model.Error{Error: "application is not healthy"})
 		return
 	}
 	ip, err := utils.GetOutboundIP()
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.JSON(http.StatusInternalServerError, model.Error{Error: err.Error()})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"IP": ip, "HostName": os.Getenv("HOSTNAME")})
+	c.JSON(http.StatusOK, model.Metadata{IP: ip, Hostname: os.Getenv("HOSTNAME")})
 }
 
 // HTTPStat returns the status code send by the client
+// @Summary Repeat Status
+// @Description Ask Dobby to return the status code sent by the client
+// @Tags Status
+// @Accept json
+// @Produce json
+// @Failure 400 {object} model.Error
+// @Param statusCode path int true "Status Code - E.g. 200"
+// @Param delay query int false "Dela(milliseconds) - E.g. 1000"
+// @Router /return/{statusCode} [get]
 func (h *Handler) HTTPStat(c *gin.Context) {
 	returnCodeStr := c.Param("statusCode")
 	returnCode, err := strconv.Atoi(returnCodeStr)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("error converting the statusCode to int: %s", err.Error())})
+		c.JSON(
+			http.StatusBadRequest,
+			model.Error{Error: fmt.Sprintf("error converting the statusCode to int: %s", err.Error())},
+		)
 		return
 	}
 
 	if delayStr := c.Query("delay"); delayStr != "" {
 		delay, err := strconv.Atoi(delayStr)
 		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("error converting the delay to int: %s", err.Error())})
+			c.JSON(
+				http.StatusBadRequest,
+				model.Error{Error: fmt.Sprintf("error converting the delay to int: %s", err.Error())},
+			)
 			return
 		}
 		time.Sleep(time.Duration(delay) * time.Millisecond)
