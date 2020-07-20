@@ -206,19 +206,34 @@ func (h *Handler) HTTPStat(c *gin.Context) {
 	c.Status(returnCode)
 }
 
-// MakeHealthPerfect will make dobby's health perfect
+// MakeHealthPerfect godoc
+// @Summary Make Healthy
+// @Description Make Dobby healthy
+// @Tags Control
+// @Accept json
+// @Produce json
+// @Success 200 {object} model.ControlSuccess
+// @Router /control/health/perfect [put]
 func (h *Handler) MakeHealthPerfect(c *gin.Context) {
 	h.isHealthy = true
-	c.JSON(200, gin.H{"status": "success"})
+	c.JSON(200, model.ControlSuccess{Status: "success"})
 }
 
-// MakeHealthSick will make dobby's health sick
+// MakeHealthSick godoc
+// @Summary Make Unhealthy
+// @Description Make Dobby sick or unhealthy
+// @Tags Control
+// @Accept json
+// @Produce json
+// @Param resetInSeconds query int false "Recover health after sometime (seconds) - E.g. 2"
+// @Success 200 {object} model.ControlSuccess
+// @Router /control/health/sick [put]
 func (h *Handler) MakeHealthSick(c *gin.Context) {
 	h.isHealthy = false
 	setupResetFunction(c, func() {
 		h.isHealthy = true
 	})
-	c.JSON(200, gin.H{"status": "success"})
+	c.JSON(200, model.ControlSuccess{Status: "success"})
 }
 
 func setupResetFunction(c *gin.Context, afterFunc func()) {
@@ -229,19 +244,34 @@ func setupResetFunction(c *gin.Context, afterFunc func()) {
 	}
 }
 
-// MakeReadyPerfect will make dobby's readiness perfect
+// MakeReadyPerfect godoc
+// @Summary Make Ready
+// @Description Make Dobby ready
+// @Tags Control
+// @Accept json
+// @Produce json
+// @Success 200 {object} model.ControlSuccess
+// @Router /control/ready/perfect [put]
 func (h *Handler) MakeReadyPerfect(c *gin.Context) {
 	h.isReady = true
-	c.JSON(200, gin.H{"status": "success"})
+	c.JSON(200, model.ControlSuccess{Status: "success"})
 }
 
-// MakeReadySick will make dobby's readiness sick
+// MakeReadySick godoc
+// @Summary Make Unready
+// @Description Make Dobby unready
+// @Tags Control
+// @Accept json
+// @Produce json
+// @Success 200 {object} model.ControlSuccess
+// @Param resetInSeconds query int false "Recover readiness after sometime (seconds) - E.g. 2"
+// @Router /control/ready/sick [put]
 func (h *Handler) MakeReadySick(c *gin.Context) {
 	h.isReady = false
 	setupResetFunction(c, func() {
 		h.isReady = true
 	})
-	c.JSON(200, gin.H{"status": "success"})
+	c.JSON(200, model.ControlSuccess{Status: "success"})
 }
 
 // Call another service and send the response
@@ -401,6 +431,11 @@ type callRequest struct {
 
 // Crash will make dobby to kill itself
 // As dobby dies, the gin server also shuts down.
+// @Summary Suicide
+// @Description Make Dobby kill itself
+// @Tags Control
+// @Accept json
+// @Router /control/crash [put]
 func Crash(server *http.Server) func(ctx *gin.Context) {
 	return func(ctx *gin.Context) {
 		defer func() {
@@ -414,6 +449,13 @@ func Crash(server *http.Server) func(ctx *gin.Context) {
 // GoTurboMemory will make dobby go Turbo
 // Watch the video `https://youtu.be/TNjAZZ3vQ8o?t=14`
 // for more context on `Going Turbo`
+// @Summary Memory Spike
+// @Description Make Dobby create a memory spike
+// @Tags Control
+// @Accept json
+// @Produce json
+// @Success 200 {object} model.ControlSuccess
+// @Router /control/goturbo/memory [put]
 func GoTurboMemory(c *gin.Context) {
 	memorySpike := []string{"qwertyuiopasdfghjklzxcvbnm"}
 	go func() {
@@ -421,17 +463,24 @@ func GoTurboMemory(c *gin.Context) {
 			memorySpike = append(memorySpike, memorySpike...)
 		}
 	}()
-	c.JSON(200, gin.H{"status": "success"})
+	c.JSON(200, model.ControlSuccess{Status: "success"})
 }
 
 // GoTurboCPU will make dobby go Turbo
 // Watch the video `https://youtu.be/TNjAZZ3vQ8o?t=14`
 // for more context on `Going Turbo`
+// @Summary CPU Spike
+// @Description Make Dobby create a CPU spike
+// @Tags Control
+// @Accept json
+// @Produce json
+// @Success 200 {object} model.ControlSuccess
+// @Router /control/goturbo/cpu [put]
 func GoTurboCPU(c *gin.Context) {
 	go func() {
 		for {
 			_ = 0
 		}
 	}()
-	c.JSON(200, gin.H{"status": "success"})
+	c.JSON(200, model.ControlSuccess{Status: "success"})
 }

@@ -25,6 +25,172 @@ var doc = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/control/crash": {
+            "put": {
+                "description": "Make Dobby kill itself",
+                "consumes": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Control"
+                ],
+                "summary": "Suicide"
+            }
+        },
+        "/control/goturbo/cpu": {
+            "put": {
+                "description": "Make Dobby create a CPU spike",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Control"
+                ],
+                "summary": "CPU Spike",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.ControlSuccess"
+                        }
+                    }
+                }
+            }
+        },
+        "/control/goturbo/memory": {
+            "put": {
+                "description": "Make Dobby create a memory spike",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Control"
+                ],
+                "summary": "Memory Spike",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.ControlSuccess"
+                        }
+                    }
+                }
+            }
+        },
+        "/control/health/perfect": {
+            "put": {
+                "description": "Make Dobby healthy",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Control"
+                ],
+                "summary": "Make Healthy",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.ControlSuccess"
+                        }
+                    }
+                }
+            }
+        },
+        "/control/health/sick": {
+            "put": {
+                "description": "Make Dobby sick or unhealthy",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Control"
+                ],
+                "summary": "Make Unhealthy",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Recover health after sometime (seconds) - E.g. 2",
+                        "name": "resetInSeconds",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.ControlSuccess"
+                        }
+                    }
+                }
+            }
+        },
+        "/control/ready/perfect": {
+            "put": {
+                "description": "Make Dobby ready",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Control"
+                ],
+                "summary": "Make Ready",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.ControlSuccess"
+                        }
+                    }
+                }
+            }
+        },
+        "/control/ready/sick": {
+            "put": {
+                "description": "Make Dobby unready",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Control"
+                ],
+                "summary": "Make Unready",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Recover readiness after sometime (seconds) - E.g. 2",
+                        "name": "resetInSeconds",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.ControlSuccess"
+                        }
+                    }
+                }
+            }
+        },
         "/health": {
             "get": {
                 "description": "Get Dobby's health status",
@@ -193,6 +359,15 @@ var doc = `{
         }
     },
     "definitions": {
+        "model.ControlSuccess": {
+            "type": "object",
+            "properties": {
+                "status": {
+                    "type": "string",
+                    "example": "success"
+                }
+            }
+        },
         "model.Error": {
             "type": "object",
             "properties": {
