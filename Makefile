@@ -10,6 +10,7 @@ GOLINT:=$(shell command -v golint 2> /dev/null)
 APP_EXECUTABLE="./out/$(APP)"
 RICHGO=$(shell command -v richgo 2> /dev/null)
 GOMETA_LINT=$(shell command -v golangci-lint 2> /dev/null)
+SWAG=$(shell command -v swag 2> /dev/null)
 GO111MODULE=on
 SHELL=/bin/bash -o pipefail
 
@@ -67,7 +68,12 @@ ifeq ($(GOMETA_LINT),)
 	curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh
 endif
 
-setup: setup-golangci-lint ensure-build-dir ## Setup environment
+setup-swag:
+ifeq ($(SWAG),)
+	GO111MODULE=off $(GO_BINARY) get -u github.com/swaggo/swag/cmd/swag
+endif
+
+setup: setup-golangci-lint setup-swag ensure-build-dir ## Setup environment
 ifeq ($(GOLINT),)
 	GO111MODULE=off $(GO_BINARY) get -u golang.org/x/lint/golint
 endif
@@ -91,3 +97,6 @@ test-cover-html: ## Run tests with coverage
 	ENVIRONMENT=test $(GO_BINARY) test -coverprofile=coverage.out -covermode=count $(pkg);\
 	tail -n +2 coverage.out >> coverage-all.out;)
 	$(GO_BINARY) tool cover -html=coverage-all.out -o out/coverage.html
+
+swagger-docs: setup-swag
+	$(SWAG) init
