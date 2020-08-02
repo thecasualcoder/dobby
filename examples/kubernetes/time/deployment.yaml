@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: time
+  labels:
+    app: time
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: time
+  template:
+    metadata:
+      labels:
+        app: time
+    spec:
+      containers:
+        - name: time
+          volumeMounts:
+            - name: proxies
+              mountPath: /etc/dobby/proxies/
+          image: jskswamy/dobby:v2.0
+          env:
+            - name: VERSION
+              value: "2.0"
+            - name: INITIAL_DELAY
+              value: "0"
+            - name: INITIAL_HEALTH
+              value: "TRUE"
+            - name: INITIAL_READINESS
+              value: "TRUE"
+            - name: PROXY_CONFIG_PATH
+              value: "/etc/dobby/proxies/"
+          ports:
+            - containerPort: 4444
+          readinessProbe:
+            httpGet:
+              path: /readiness
+              port: 4444
+            initialDelaySeconds: 0
+            periodSeconds: 3
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 4444
+            initialDelaySeconds: 0
+            periodSeconds: 3
+      volumes:
+        - name: proxies
+          configMap:
+            name: time-proxies

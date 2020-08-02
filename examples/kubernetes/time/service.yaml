@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: time
+spec:
+  type: ClusterIP
+  selector:
+      app: time
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 4444

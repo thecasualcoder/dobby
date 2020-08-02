@@ -1,12 +1,12 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: dobby
+  name: weather
 spec:
-  type: NodePort
+  type: ClusterIP
   selector:
-      app: dobby
+      app: weather
   ports:
   - protocol: TCP
-    port: 4444
+    port: 80
     targetPort: 4444

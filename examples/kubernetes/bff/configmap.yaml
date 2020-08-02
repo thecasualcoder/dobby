@@ -1,0 +1,18 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: bff-proxies
+  namespace: default
+data:
+  bff.yaml: |
+    - path: /time
+      method: GET
+      proxy:
+        url: http://time.default/v1/time
+        method: GET
+    - path: /time/milan
+      method: GET
+      proxy:
+        url: http://time.default/v1/time/milan
+        method: GET

@@ -1,0 +1,18 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: time-proxies
+  namespace: default
+data:
+  time.yaml: |
+    - path: /v1/time
+      method: GET
+      proxy:
+        url: http://worldtimeapi.org/api/timezone/asia/kolkata
+        method: GET
+    - path: /v1/time/milan
+      method: GET
+      proxy:
+        url: http://worldtimeapi.org/api/timezone/europe/rome
+        method: GET

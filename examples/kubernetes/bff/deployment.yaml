@@ -1,21 +1,21 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: dobby
+  name: bff
   labels:
-    app: dobby
+    app: bff
 spec:
   replicas: 2
   selector:
     matchLabels:
-      app: dobby
+      app: bff
   template:
     metadata:
       labels:
-        app: dobby
+        app: bff
     spec:
       containers:
-        - name: dobby
+        - name: bff
           volumeMounts:
             - name: proxies
               mountPath: /etc/dobby/proxies/
@@ -48,4 +48,4 @@ spec:
       volumes:
         - name: proxies
           configMap:
-            name: dobby-proxies
+            name: bff-proxies
