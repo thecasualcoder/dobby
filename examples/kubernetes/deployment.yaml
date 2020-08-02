@@ -16,7 +16,10 @@ spec:
     spec:
       containers:
         - name: dobby
-          image: thecasualcoder/dobby
+          volumeMounts:
+            - name: proxies
+              mountPath: /etc/dobby/proxies/
+          image: jskswamy/dobby:v2.0
           env:
             - name: VERSION
               value: "2.0"
@@ -26,17 +29,23 @@ spec:
               value: "TRUE"
             - name: INITIAL_READINESS
               value: "TRUE"
+            - name: PROXY_CONFIG_PATH
+              value: "/etc/dobby/proxies/"
           ports:
             - containerPort: 4444
           readinessProbe:
             httpGet:
               path: /readiness
               port: 4444
-            initialDelaySeconds: 20
+            initialDelaySeconds: 0
             periodSeconds: 3
           livenessProbe:
             httpGet:
               path: /health
               port: 4444
-            initialDelaySeconds: 20
+            initialDelaySeconds: 0
             periodSeconds: 3
+      volumes:
+        - name: proxies
+          configMap:
+            name: dobby-proxies

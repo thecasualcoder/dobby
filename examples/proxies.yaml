@@ -1,0 +1,27 @@
+- path: /v1/weather
+  method: GET
+  proxy:
+    url: http://wttr.in/chennai
+    method: GET
+- path: /v2/weather
+  method: GET
+  proxy:
+    url: http://wttr.in/chennai?format=1
+    method: GET
+- path: /v3/weather
+  method: GET
+  proxy:
+    url: http://wttr.in/chennai?format=2
+    method: GET
+---
+- path: /v1/weather
+  method: GET
+  proxy:
+    url: http://wttr.in/pune?format=1
+    method: GET
+---
+- path: /v1/weather
+  method: GET
+  proxy:
+    url: http://wttr.in/bangalore
+    method: GET

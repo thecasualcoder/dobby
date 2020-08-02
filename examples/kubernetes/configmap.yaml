@@ -1,0 +1,13 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: dobby-proxies
+  namespace: default
+data:
+  chennai.yaml: |
+    - path: /v1/weather
+      method: GET
+      proxy:
+        url: http://wttr.in/chennai
+        method: GET
