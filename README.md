@@ -118,6 +118,10 @@ $ make compile
 $ ./out/dobby server
 ```
 
+### Swagger Docs
+
+Swagger docs will be available at: [http://localhost:4444/swagger/index.html](http://localhost:4444/swagger/index.html)
+
 ### Contributing
 
 Fork the repo and start contributing

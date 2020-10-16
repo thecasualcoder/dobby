@@ -2,6 +2,8 @@ package server
 
 import (
 	"fmt"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 
 	"net/http"
 
@@ -57,4 +59,5 @@ func Bind(root *gin.Engine, server *http.Server, initialHealth, initialReadiness
 		defaultContext := handler.NewDefaultContext(context)
 		h.ProxyRoute(defaultContext)
 	})
+	root.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 }
