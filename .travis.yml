@@ -3,9 +3,13 @@ language: go
 go:
   - 1.x
 
+services:
+  - docker
+
 env:
   global:
     - GO111MODULE=on
 
 script:
   - make all
+  - docker run --rm -v $(pwd):/project openpolicyagent/conftest test --policy dockerfile-security.rego Dockerfile
