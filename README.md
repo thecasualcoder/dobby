@@ -38,6 +38,12 @@ You can ask dobby's
   curl localhost:4444/meta
   ```
 
+- to return the desired status code
+  ```bash
+  curl localhost:4444/return/404
+  # you can provide any valid http status code instead of 404
+  ```
+
 You can order dobby to
 
 - Repeat the status code (with requested delay in milliseconds)
