@@ -13,3 +13,9 @@ env:
 script:
   - make all
   - docker run --rm -v $(pwd):/project openpolicyagent/conftest test --policy dockerfile-security.rego Dockerfile
+
+deploy:
+  provider: script
+  script: bash scripts/docker-push.sh $TRAVIS_TAG
+  on:
+    tags: true
