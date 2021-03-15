@@ -287,6 +287,72 @@ var doc = `{
                 }
             }
         },
+        "/proxy": {
+            "post": {
+                "description": "Configure proxy route to another endpoint\nSupports all REST operations",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Feature"
+                ],
+                "summary": "Add proxy to any http endpoint",
+                "parameters": [
+                    {
+                        "description": "'{path:/time, method: GET, proxy: {url:http://worldtimeapi.org/api/timezone/asia/kolkata, method:GET}}'",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handler.proxyRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Delete configured proxy route to another endpoint\nSupports all REST operations",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Feature"
+                ],
+                "summary": "Delete configured proxy to any http endpoint",
+                "parameters": [
+                    {
+                        "description": "'{path:/time, method: GET, proxy: {url:http://worldtimeapi.org/api/timezone/asia/kolkata, method:GET}}'",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handler.proxyRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                }
+            }
+        },
         "/ready": {
             "get": {
                 "description": "Get Dobby's readiness",
@@ -391,6 +457,31 @@ var doc = `{
         }
     },
     "definitions": {
+        "handler.proxy": {
+            "type": "object",
+            "properties": {
+                "method": {
+                    "type": "string"
+                },
+                "url": {
+                    "type": "string"
+                }
+            }
+        },
+        "handler.proxyRequest": {
+            "type": "object",
+            "properties": {
+                "method": {
+                    "type": "string"
+                },
+                "path": {
+                    "type": "string"
+                },
+                "proxy": {
+                    "$ref": "#/definitions/handler.proxy"
+                }
+            }
+        },
         "model.CallRequest": {
             "type": "object",
             "properties": {

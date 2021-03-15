@@ -1,4 +1,20 @@
 definitions:
+  handler.proxy:
+    properties:
+      method:
+        type: string
+      url:
+        type: string
+    type: object
+  handler.proxyRequest:
+    properties:
+      method:
+        type: string
+      path:
+        type: string
+      proxy:
+        $ref: '#/definitions/handler.proxy'
+    type: object
   model.CallRequest:
     properties:
       body:
@@ -223,6 +239,55 @@ paths:
       summary: Dobby Metadata
       tags:
       - Status
+  /proxy:
+    delete:
+      consumes:
+      - application/json
+      description: |-
+        Delete configured proxy route to another endpoint
+        Supports all REST operations
+      parameters:
+      - description: '''{path:/time, method: GET, proxy: {url:http://worldtimeapi.org/api/timezone/asia/kolkata,
+          method:GET}}'''
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handler.proxyRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: object
+      summary: Delete configured proxy to any http endpoint
+      tags:
+      - Feature
+    post:
+      consumes:
+      - application/json
+      description: |-
+        Configure proxy route to another endpoint
+        Supports all REST operations
+      parameters:
+      - description: '''{path:/time, method: GET, proxy: {url:http://worldtimeapi.org/api/timezone/asia/kolkata,
+          method:GET}}'''
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handler.proxyRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: object
+      summary: Add proxy to any http endpoint
+      tags:
+      - Feature
   /ready:
     get:
       consumes:
