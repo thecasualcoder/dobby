@@ -28,7 +28,16 @@ func (h *Handler) ProxyRoute(c Context) {
 	sendResponse(c, response, proxyConfig.URL)
 }
 
-// AddProxy will add the proxy settings
+// AddProxy allows to configure proxy to any existing endpoint
+// @Summary Add proxy to any http endpoint
+// @Description Configure proxy route to another endpoint
+// @Description Supports all REST operations
+// @Tags Feature
+// @Accept json
+// @Produce json
+// @Success 200 {object} interface{}
+// @Router /proxy [post]
+// @Param body body proxyRequest true "'{path:/time, method: GET, proxy: {url:http://worldtimeapi.org/api/timezone/asia/kolkata, method:GET}}'"
 func (h *Handler) AddProxy(c Context) {
 	decoder := json.NewDecoder(c.GetRequestBody())
 	var proxyRequest proxyRequest
@@ -45,7 +54,16 @@ func (h *Handler) AddProxy(c Context) {
 	c.Status(201)
 }
 
-// DeleteProxy will delete the proxy configuration
+// DeleteProxy allows to remove configured proxy to any existing endpoint
+// @Summary Delete configured proxy to any http endpoint
+// @Description Delete configured proxy route to another endpoint
+// @Description Supports all REST operations
+// @Tags Feature
+// @Accept json
+// @Produce json
+// @Success 200 {object} interface{}
+// @Router /proxy [delete]
+// @Param body body proxyRequest true "'{path:/time, method: GET, proxy: {url:http://worldtimeapi.org/api/timezone/asia/kolkata, method:GET}}'"
 func (h *Handler) DeleteProxy(c Context) {
 	decoder := json.NewDecoder(c.GetRequestBody())
 	var proxyRequest proxyRequest
