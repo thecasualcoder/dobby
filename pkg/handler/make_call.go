@@ -9,7 +9,17 @@ import (
 	"net/http"
 )
 
-// Call another service and send the response
+// Call allows to make a http call to another service and send the response
+// @Summary Call a http endpoint
+// @Description Make a http call to another service and send the response
+// @Description Supports all REST operations
+// @Tags Feature
+// @Accept json
+// @Produce json
+// @Success 200 {object} interface{}
+// @Router /call [post]
+// @Param body body model.CallRequest true "'{url: http://httpbin.org/post, method: POST, body: {key: value}}' will make a post request to http://httpbin.org/post"
+// https://github.com/swaggo/swag/blob/3d90fc0a5c6ef9566df81fe34425b0b35b0f651e/operation.go#L184
 func (h *Handler) Call(c Context) {
 	decoder := json.NewDecoder(c.GetRequestBody())
 	var callRequest model.CallRequest

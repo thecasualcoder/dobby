@@ -1,4 +1,13 @@
 definitions:
+  model.CallRequest:
+    properties:
+      body:
+        type: object
+      method:
+        type: string
+      url:
+        type: string
+    type: object
   model.ControlSuccess:
     properties:
       status:
@@ -38,8 +47,32 @@ definitions:
     type: object
 info:
   contact: {}
-  license: {}
 paths:
+  /call:
+    post:
+      consumes:
+      - application/json
+      description: |-
+        Make a http call to another service and send the response
+        Supports all REST operations
+      parameters:
+      - description: '''{url: http://httpbin.org/post, method: POST, body: {key: value}}''
+          will make a post request to http://httpbin.org/post'
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/model.CallRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: object
+      summary: Call a http endpoint
+      tags:
+      - Feature
   /control/crash:
     put:
       consumes:
