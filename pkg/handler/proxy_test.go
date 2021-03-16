@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
@@ -80,17 +81,21 @@ func TestHandler_ProxyRoute(t *testing.T) {
 		defer ctrl.Finish()
 		mockContext := mock.NewMockContext(ctrl)
 		client := mock.NewMockhttpClient(ctrl)
-
+		expectedURL := "/version"
+		expectedResponse := &http.Response{StatusCode: 200, Body: ioutil.NopCloser(strings.NewReader(""))}
 		handler := New(true, true, client)
-		handler.proxyRequests = proxyRequests{proxyRequest{
+		handler.proxyRequests = proxyRequests{{
 			Path:   "/v1/version",
 			Method: "GET",
+			Proxy: proxy{
+				URL:    expectedURL,
+				Method: "GET",
+			},
 		}}
-
 		mockContext.EXPECT().GetURI().Return(&url.URL{Path: "/v1/version"})
 		mockContext.EXPECT().GetMethod().Return("GET")
-		mockContext.EXPECT().Status(200)
-		client.EXPECT().Do(gomock.Any()).Return(&http.Response{StatusCode: 200, Body: ioutil.NopCloser(strings.NewReader(""))}, nil)
+		client.EXPECT().Do(gomock.Any()).Return(expectedResponse, nil)
+		mockContext.EXPECT().SendResponse(expectedResponse, expectedURL)
 
 		handler.ProxyRoute(mockContext)
 	})
@@ -99,11 +104,59 @@ func TestHandler_ProxyRoute(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 		mockContext := mock.NewMockContext(ctrl)
-
 		handler := New(true, true, nil)
 		mockContext.EXPECT().GetURI().Return(&url.URL{Path: "/v1/version"})
 		mockContext.EXPECT().GetMethod().Return("GET")
 		mockContext.EXPECT().Status(404)
+
+		handler.ProxyRoute(mockContext)
+	})
+
+	t.Run("should return error if http request creation fails", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+		mockContext := mock.NewMockContext(ctrl)
+		client := mock.NewMockhttpClient(ctrl)
+
+		handler := New(true, true, client)
+		handler.proxyRequests = proxyRequests{{
+			Path:   "/v1/version",
+			Method: "GET",
+			Proxy: proxy{
+				URL:    "foo://bar",
+				Method: "😁",
+			},
+		}}
+		mockContext.EXPECT().GetURI().Return(&url.URL{Path: "/v1/version"})
+		mockContext.EXPECT().GetMethod().Return("GET")
+		mockContext.EXPECT().JSON(400, gomock.Any()).Do(func(_ int, data interface{}) {
+			assert.EqualValues(t, "error when creating request for foo://bar: net/http: invalid method \"😁\"", data.(gin.H)["error"])
+		})
+
+		handler.ProxyRoute(mockContext)
+	})
+
+	t.Run("should return error when proxy fails", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+		mockContext := mock.NewMockContext(ctrl)
+		client := mock.NewMockhttpClient(ctrl)
+
+		handler := New(true, true, client)
+		handler.proxyRequests = proxyRequests{{
+			Path:   "/v1/version",
+			Method: "GET",
+			Proxy: proxy{
+				URL:    "/version",
+				Method: "GET",
+			},
+		}}
+		mockContext.EXPECT().GetURI().Return(&url.URL{Path: "/v1/version"})
+		mockContext.EXPECT().GetMethod().Return("GET")
+		client.EXPECT().Do(gomock.Any()).Return(nil, fmt.Errorf("error making request"))
+		mockContext.EXPECT().JSON(400, gomock.Any()).Do(func(_ int, data interface{}) {
+			assert.EqualValues(t, "error when making request for /version: GET", data.(gin.H)["error"])
+		})
 
 		handler.ProxyRoute(mockContext)
 	})
