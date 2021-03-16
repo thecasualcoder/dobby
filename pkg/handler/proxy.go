@@ -22,10 +22,10 @@ func (h *Handler) ProxyRoute(c Context) {
 	}
 	response, err := h.client.Do(request)
 	if err != nil {
-		c.JSON(400, gin.H{"error": fmt.Sprintf("error when creating request for %s: %s", proxyConfig.URL, proxyConfig.Method)})
+		c.JSON(400, gin.H{"error": fmt.Sprintf("error when making request for %s: %s", proxyConfig.URL, proxyConfig.Method)})
 		return
 	}
-	sendResponse(c, response, proxyConfig.URL)
+	c.SendResponse(response, proxyConfig.URL)
 }
 
 // AddProxy allows to configure proxy to any existing endpoint

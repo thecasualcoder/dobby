@@ -33,7 +33,7 @@ func (h *Handler) Call(c Context) {
 		c.JSON(400, gin.H{"error": fmt.Sprintf("error when making request to %s: %s", callRequest.URL, err.Error())})
 		return
 	}
-	sendResponse(c, response, callRequest.URL)
+	c.SendResponse(response, callRequest.URL)
 }
 
 func (h *Handler) makeCall(callRequest model.CallRequest) (*http.Response, error) {

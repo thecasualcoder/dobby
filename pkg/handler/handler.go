@@ -41,6 +41,7 @@ type Context interface {
 	Status(code int)
 	GetURI() *url.URL
 	GetMethod() string
+	SendResponse(response *http.Response, url string)
 }
 
 // NewDefaultContext creates the wrapper Context with gin Context
@@ -72,8 +73,7 @@ func (c defaultContext) GetRequestBody() io.ReadCloser {
 	return c.ginContext.Request.Body
 }
 
-//TODO: Move it as a method within Context
-func sendResponse(c Context, response *http.Response, url string) {
+func (c defaultContext) SendResponse(response *http.Response, url string) {
 	responseData, err := ioutil.ReadAll(response.Body)
 	if err != nil {
 		c.JSON(400, gin.H{"error": fmt.Sprintf("error when reading response from %s: %s", url, err.Error())})

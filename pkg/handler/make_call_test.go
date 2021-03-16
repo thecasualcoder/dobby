@@ -14,7 +14,7 @@ import (
 )
 
 func TestHandler_Call(t *testing.T) {
-	t.Run("should return status code alone when there is no body from upstream", func(t *testing.T) {
+	t.Run("should make call to upstream on success", func(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 		httpClient := mock.NewMockhttpClient(ctrl)
@@ -26,30 +26,10 @@ func TestHandler_Call(t *testing.T) {
   "url": "http://localhost:4444/version",
   "method": "GET"
 }`)
+		expectedResponse := &http.Response{StatusCode: 200, Body: ioutil.NopCloser(strings.NewReader(`{"version": 1}`))}
 		mockContext.EXPECT().GetRequestBody().Return(ioutil.NopCloser(stringReader))
-		httpClient.EXPECT().Do(gomock.Any()).Return(&http.Response{StatusCode: 200, Body: ioutil.NopCloser(strings.NewReader(""))}, nil)
-		mockContext.EXPECT().Status(200)
-
-		handler.Call(mockContext)
-	})
-
-	t.Run("should parse the body if the response from upstream contains body", func(t *testing.T) {
-		ctrl := gomock.NewController(t)
-		defer ctrl.Finish()
-		httpClient := mock.NewMockhttpClient(ctrl)
-		mockContext := mock.NewMockContext(ctrl)
-		handler := h.New(true, true, httpClient)
-
-		stringReader := strings.NewReader(`
-{
-  "url": "http://localhost:4444/version",
-  "method": "GET"
-}`)
-		mockContext.EXPECT().GetRequestBody().Return(ioutil.NopCloser(stringReader))
-		httpClient.EXPECT().Do(gomock.Any()).Return(&http.Response{StatusCode: 200, Body: ioutil.NopCloser(strings.NewReader(`{"version": 1}`))}, nil)
-		mockContext.EXPECT().JSON(200, gomock.Any()).Do(func(_ int, data interface{}) {
-			assert.EqualValues(t, 1, data.(map[string]interface{})["version"])
-		})
+		httpClient.EXPECT().Do(gomock.Any()).Return(expectedResponse, nil)
+		mockContext.EXPECT().SendResponse(expectedResponse, "http://localhost:4444/version")
 
 		handler.Call(mockContext)
 	})
@@ -87,26 +67,6 @@ func TestHandler_Call(t *testing.T) {
 		httpClient.EXPECT().Do(gomock.Any()).Return(nil, fmt.Errorf("error making request"))
 		mockContext.EXPECT().JSON(400, gomock.Any()).Do(func(_ int, data interface{}) {
 			assert.Equal(t, "error when making request to http://localhost:4444/version: error making request", data.(gin.H)["error"])
-		})
-
-		handler.Call(mockContext)
-	})
-
-	t.Run("should parse return special characters in string", func(t *testing.T) {
-		ctrl := gomock.NewController(t)
-		defer ctrl.Finish()
-		httpClient := mock.NewMockhttpClient(ctrl)
-		mockContext := mock.NewMockContext(ctrl)
-		handler := h.New(true, true, httpClient)
-
-		stringReader := strings.NewReader(`
-{
-  "url": "http://localhost:4444/version"
-}`)
-		mockContext.EXPECT().GetRequestBody().Return(ioutil.NopCloser(stringReader))
-		httpClient.EXPECT().Do(gomock.Any()).Return(&http.Response{StatusCode: 200, Body: ioutil.NopCloser(strings.NewReader("⛅️  +33°C"))}, nil)
-		mockContext.EXPECT().JSON(200, gomock.Any()).Do(func(_ int, data interface{}) {
-			assert.Equal(t, "⛅️  +33°C", data)
 		})
 
 		handler.Call(mockContext)
