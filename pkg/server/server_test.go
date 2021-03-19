@@ -152,7 +152,7 @@ func TestVersion(t *testing.T) {
 		assert.Equal(t, http.StatusInternalServerError, response.Code)
 		assert.Equal(t, `{"error":"application is not healthy"}`, response.Body.String())
 
-		time.Sleep(time.Duration(resetInSeconds)*time.Second + time.Millisecond)
+		time.Sleep((time.Duration(resetInSeconds) * time.Second) + (10 * time.Millisecond))
 
 		response = performRequest(router, "GET", "/version", nil)
 		assert.Equal(t, http.StatusOK, response.Code)
@@ -187,7 +187,7 @@ func TestVersion(t *testing.T) {
 		assert.Equal(t, http.StatusServiceUnavailable, response.Code)
 		assert.Equal(t, `{"error":"application is not ready"}`, response.Body.String())
 
-		time.Sleep(time.Duration(resetInSeconds)*time.Second + time.Millisecond)
+		time.Sleep((time.Duration(resetInSeconds) * time.Second) + (10 * time.Millisecond))
 
 		response = performRequest(router, "GET", "/version", nil)
 		assert.Equal(t, http.StatusOK, response.Code)
