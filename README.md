@@ -1,6 +1,6 @@
 # dobby
 
-[![Build Status](https://travis-ci.org/thecasualcoder/dobby.svg?branch=master)](https://travis-ci.org/thecasualcoder/dobby)
+[![Build Status](https://github.com/thecasualcoder/dobby/workflows/Check/badge.svg)](https://github.com/thecasualcoder/dobby/actions?query=workflow%3ACheck+branch%3Amaster)
 [![Go Doc](https://godoc.org/github.com/thecasualcoder/dobby?status.svg)](https://godoc.org/github.com/thecasualcoder/dobby)
 [![Go Report Card](https://goreportcard.com/badge/github.com/thecasualcoder/dobby)](https://goreportcard.com/report/github.com/thecasualcoder/dobby)
 

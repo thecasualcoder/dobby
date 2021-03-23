@@ -95,3 +95,6 @@ test-cover-html: ## Run tests with coverage
 
 swagger-docs: setup-swag ## Generate swagger docs
 	$(SWAG) init
+
+dockerfile-security: ## Dockerfile OPA
+	docker run --rm -v $(PWD):/project openpolicyagent/conftest test --policy dockerfile-security.rego Dockerfile
