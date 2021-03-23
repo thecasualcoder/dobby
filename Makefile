@@ -6,7 +6,7 @@ GO111MODULE=on
 APP=dobby
 VERSION?=1.0
 APP_EXECUTABLE="./out/$(APP)"
-SRC_PACKAGES=$(shell go list -mod=vendor ./... | grep -v "vendor")
+SRC_PACKAGES=$(shell go list ./... | grep -v "vendor")
 
 SHELL=/bin/bash -o pipefail
 BUILD?=$(shell git describe --always --dirty 2> /dev/null)
@@ -83,7 +83,7 @@ lint: setup-golangci-lint
 	$(GOLANGCI_LINT) run -v
 
 test: ensure-build-dir ## Run tests
-	ENVIRONMENT=test $(GO_BINARY) test -mod=vendor $(SRC_PACKAGES) -p=1 -coverprofile ./out/coverage -short -v | grep -viE "start|no test files"
+	ENVIRONMENT=test $(GO_BINARY) test $(SRC_PACKAGES) -p=1 -coverprofile ./out/coverage -short -v | grep -viE "start|no test files"
 
 test-cover-html: ## Run tests with coverage
 	mkdir -p ./out
