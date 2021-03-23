@@ -2,35 +2,52 @@
 help: ## Prints help (only for targets with comments)
 	@grep -E '^[a-zA-Z._-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
 
-APP=dobby
-SRC_PACKAGES=$(shell go list ./... | grep -v "vendor")
-VERSION?=1.0
-BUILD?=$(shell git describe --always --dirty 2> /dev/null)
-GOLINT:=$(shell command -v golint 2> /dev/null)
-APP_EXECUTABLE="./out/$(APP)"
-RICHGO=$(shell command -v richgo 2> /dev/null)
-GOMETA_LINT=$(shell command -v golangci-lint 2> /dev/null)
-SWAG=$(shell command -v swag 2> /dev/null)
 GO111MODULE=on
-SHELL=/bin/bash -o pipefail
+APP=dobby
+VERSION?=1.0
+APP_EXECUTABLE="./out/$(APP)"
+SRC_PACKAGES=$(shell go list -mod=vendor ./... | grep -v "vendor")
 
-ifeq ($(GOMETA_LINT),)
-	GOMETA_LINT=$(shell command -v $(PWD)/bin/golangci-lint 2> /dev/null)
+SHELL=/bin/bash -o pipefail
+BUILD?=$(shell git describe --always --dirty 2> /dev/null)
+ifeq ($(BUILD),)
+	BUILD=dev
 endif
 
+RICHGO=$(shell command -v richgo 2> /dev/null)
 ifeq ($(RICHGO),)
 	GO_BINARY=go
 else
 	GO_BINARY=richgo
 endif
 
-ifeq ($(BUILD),)
-	BUILD=dev
+GOLANGCI_LINT=$(shell command -v golangci-lint 2> /dev/null)
+GOLANGCI_LINT_VERSION=v1.31.0
+ifeq ($(GOLANGCI_LINT),)
+	GOLANGCI_LINT=$(shell command -v $(PWD)/bin/golangci-lint 2> /dev/null)
 endif
 
 ifdef CI_COMMIT_SHORT_SHA
 	BUILD=$(CI_COMMIT_SHORT_SHA)
 endif
+
+setup-richgo:
+ifeq ($(RICHGO),)
+	GO111MODULE=off $(GO_BINARY) get -u github.com/kyoh86/richgo
+endif
+
+setup-golangci-lint:
+ifeq ($(GOLANGCI_LINT),)
+	curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s $(GOLANGCI_LINT_VERSION)
+endif
+
+SWAG=$(shell command -v swag 2> /dev/null)
+setup-swag:
+ifeq ($(SWAG),)
+	GO111MODULE=off $(GO_BINARY) get -u github.com/swaggo/swag/cmd/swag
+endif
+
+setup: setup-golangci-lint setup-swag ensure-build-dir ## Setup environment
 
 all: setup build
 
@@ -38,7 +55,9 @@ ensure-build-dir:
 	mkdir -p out
 
 build-deps: ## Install dependencies
+	go get
 	go mod tidy
+	go mod vendor
 
 update-deps: ## Update dependencies
 	go get -u
@@ -52,7 +71,7 @@ run: compile ## Run dobby
 compile-linux: ensure-build-dir ## Compile dobby for linux
 	GOOS=linux GOARCH=amd64 $(GO_BINARY) build -ldflags "-X main.majorVersion=$(VERSION) -X main.minorVersion=${BUILD}" -o $(APP_EXECUTABLE) ./main.go
 
-build: build-deps fmt vet lint-all test compile ## Build the application
+build: build-deps fmt lint test compile ## Build the application
 
 compress: compile ## Compress the binary
 	upx $(APP_EXECUTABLE)
@@ -60,35 +79,11 @@ compress: compile ## Compress the binary
 fmt:
 	$(GO_BINARY) fmt $(SRC_PACKAGES)
 
-vet:
-	$(GO_BINARY) vet $(SRC_PACKAGES)
-
-setup-golangci-lint:
-ifeq ($(GOMETA_LINT),)
-	curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh
-endif
-
-setup-swag:
-ifeq ($(SWAG),)
-	GO111MODULE=off $(GO_BINARY) get -u github.com/swaggo/swag/cmd/swag
-endif
-
-setup: setup-golangci-lint setup-swag ensure-build-dir ## Setup environment
-ifeq ($(GOLINT),)
-	GO111MODULE=off $(GO_BINARY) get -u golang.org/x/lint/golint
-endif
-ifeq ($(RICHGO),)
-	GO111MODULE=off $(GO_BINARY) get -u github.com/kyoh86/richgo
-endif
-
-lint-all: lint setup-golangci-lint
-	$(GOMETA_LINT) run
-
-lint:
-	./scripts/lint $(SRC_PACKAGES)
+lint: setup-golangci-lint
+	$(GOLANGCI_LINT) run -v
 
 test: ensure-build-dir ## Run tests
-	ENVIRONMENT=test $(GO_BINARY) test $(SRC_PACKAGES) -p=1 -coverprofile ./out/coverage -short -v | grep -vi "start" | grep -vi "no test files"
+	ENVIRONMENT=test $(GO_BINARY) test -mod=vendor $(SRC_PACKAGES) -p=1 -coverprofile ./out/coverage -short -v | grep -viE "start|no test files"
 
 test-cover-html: ## Run tests with coverage
 	mkdir -p ./out
@@ -98,5 +93,5 @@ test-cover-html: ## Run tests with coverage
 	tail -n +2 coverage.out >> coverage-all.out;)
 	$(GO_BINARY) tool cover -html=coverage-all.out -o out/coverage.html
 
-swagger-docs: setup-swag
+swagger-docs: setup-swag ## Generate swagger docs
 	$(SWAG) init
