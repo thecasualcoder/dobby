@@ -54,6 +54,9 @@ all: setup build
 ensure-build-dir:
 	mkdir -p out
 
+ensure-vendor:
+	go mod vendor
+
 build-deps: ## Install dependencies
 	go get
 	go mod tidy
@@ -62,13 +65,13 @@ build-deps: ## Install dependencies
 update-deps: ## Update dependencies
 	go get -u
 
-compile: ensure-build-dir ## Compile dobby
+compile: ensure-build-dir ensure-vendor## Compile dobby
 	$(GO_BINARY) build -ldflags "-X main.majorVersion=$(VERSION) -X main.minorVersion=${BUILD}" -o $(APP_EXECUTABLE) ./main.go
 
 run: compile ## Run dobby
 	./out/dobby server
 
-compile-linux: ensure-build-dir ## Compile dobby for linux
+compile-linux: ensure-build-dir ensure-vendor ## Compile dobby for linux
 	GOOS=linux GOARCH=amd64 $(GO_BINARY) build -ldflags "-X main.majorVersion=$(VERSION) -X main.minorVersion=${BUILD}" -o $(APP_EXECUTABLE) ./main.go
 
 build: build-deps fmt lint test compile ## Build the application
@@ -82,7 +85,7 @@ fmt:
 lint: setup-golangci-lint
 	$(GOLANGCI_LINT) run -v
 
-test: ensure-build-dir ## Run tests
+test: ensure-build-dir ensure-vendor ## Run tests
 	ENVIRONMENT=test $(GO_BINARY) test $(SRC_PACKAGES) -p=1 -coverprofile ./out/coverage -short -v | grep -viE "start|no test files"
 
 test-cover-html: ## Run tests with coverage
