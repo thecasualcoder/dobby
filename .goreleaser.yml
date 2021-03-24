@@ -12,12 +12,12 @@ builds:
       - amd64
       - arm
       - arm64
-docker:
-  image_templates:
-    - "thecasualcoder/{{ .ProjectName }}:{{ .Tag }}"
-    - "thecasualcoder/{{ .ProjectName }}:v{{ .Major }}"
-    - "thecasualcoder/{{ .ProjectName }}:v{{ .Major }}.{{ .Minor }}"
-    - "thecasualcoder/{{ .ProjectName }}:latest"
+dockers:
+  - image_templates:
+      - "thecasualcoder/{{ .ProjectName }}:{{ .Tag }}"
+      - "thecasualcoder/{{ .ProjectName }}:v{{ .Major }}"
+      - "thecasualcoder/{{ .ProjectName }}:v{{ .Major }}.{{ .Minor }}"
+      - "thecasualcoder/{{ .ProjectName }}:latest"
 archives:
   - replacements:
       darwin: Darwin

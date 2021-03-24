@@ -382,3 +382,4 @@ Fork the repo and start contributing
 - Make sure to run build before raising PR (`make build`)
 - Make sure to generate and check in swagger docs if any added (`make swagger-docs`)
 - Update README.md if necessary
+- Check goreleaser before pushing (`goreleaser --snapshot --skip-publish --rm-dist --debug`)
