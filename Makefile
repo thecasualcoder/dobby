@@ -33,7 +33,7 @@ else
 endif
 
 GOLANGCI_LINT=$(shell command -v golangci-lint 2> /dev/null)
-GOLANGCI_LINT_VERSION=v1.31.0
+GOLANGCI_LINT_VERSION=v1.41.1
 ifeq ($(GOLANGCI_LINT),)
 	GOLANGCI_LINT=$(shell command -v $(PWD)/bin/golangci-lint 2> /dev/null)
 endif
@@ -76,7 +76,7 @@ build-deps: ## Install dependencies
 update-deps: ## Update dependencies
 	go get -u
 
-compile: ensure-build-dir ensure-vendor## Compile dobby
+compile: ensure-build-dir ## Compile dobby
 	$(GO_BINARY) build -ldflags "-X main.majorVersion=$(VERSION) -X main.minorVersion=${BUILD}" -o $(APP_EXECUTABLE) ./main.go
 
 run: compile ## Run dobby
@@ -85,7 +85,7 @@ run: compile ## Run dobby
 compile-linux: ensure-build-dir ## Compile dobby for linux
 	GOOS=linux GOARCH=amd64 $(GO_BINARY) build -ldflags "-X main.majorVersion=$(VERSION) -X main.minorVersion=${BUILD}" -o $(APP_EXECUTABLE) ./main.go
 
-build: build-deps fmt lint test compile ## Build the application
+build: fmt lint test compile ## Build the application
 
 compress: compile ## Compress the binary
 	upx $(APP_EXECUTABLE)

@@ -106,7 +106,7 @@ import "github.com/swaggo/files" // swagger embed files
 
 2. 在`main.go`源代码中添加通用的API注释：
 
-```bash
+```go
 // @title Swagger Example API
 // @version 1.0
 // @description This is a sample server celler server.
@@ -241,9 +241,9 @@ import (
 // @Param id path int true "Account ID"
 // @Success 200 {object} model.Account
 // @Header 200 {string} Token "qwerty"
-// @Failure 400 {object} httputil.HTTPError
-// @Failure 404 {object} httputil.HTTPError
+// @Failure 400,404 {object} httputil.HTTPError
 // @Failure 500 {object} httputil.HTTPError
+// @Failure default {object} httputil.DefaultError
 // @Router /accounts/{id} [get]
 func (c *Controller) ShowAccount(ctx *gin.Context) {
     id := ctx.Param("id")
@@ -268,9 +268,9 @@ func (c *Controller) ShowAccount(ctx *gin.Context) {
 // @Param q query string false "name search by q"
 // @Success 200 {array} model.Account
 // @Header 200 {string} Token "qwerty"
-// @Failure 400 {object} httputil.HTTPError
-// @Failure 404 {object} httputil.HTTPError
+// @Failure 400,404 {object} httputil.HTTPError
 // @Failure 500 {object} httputil.HTTPError
+// @Failure default {object} httputil.DefaultError
 // @Router /accounts [get]
 func (c *Controller) ListAccounts(ctx *gin.Context) {
     q := ctx.Request.URL.Query().Get("q")
@@ -356,10 +356,10 @@ swag init
 
 Example [celler/controller](https://github.com/swaggo/swag/tree/master/example/celler/controller)
 
-| 注释                 | 描述                                                                                                    |                                                    |
-| -------------------- | ------------------------------------------------------------------------------------------------------- | -------------------------------------------------- |
+| 注释                 | 描述                                                                                                    |
+| -------------------- | ------------------------------------------------------------------------------------------------------- |
 | description          | 操作行为的详细说明。                                                                                    |
-| description.markdown | 应用程序的简短描述。该描述将从名为`endpointname.md`的文件中读取。                                       | // @description.file endpoint.description.markdown |
+| description.markdown | 应用程序的简短描述。该描述将从名为`endpointname.md`的文件中读取。                                       |
 | id                   | 用于标识操作的唯一字符串。在所有API操作中必须唯一。                                                     |
 | tags                 | 每个API操作的标签列表，以逗号分隔。                                                                     |
 | summary              | 该操作的简短摘要。                                                                                      |
@@ -369,13 +369,14 @@ Example [celler/controller](https://github.com/swaggo/swag/tree/master/example/c
 | security             | 每个API操作的[安全性](#security)。                                                                      |
 | success              | 以空格分隔的成功响应。`return code`,`{param type}`,`data type`,`comment`                                |
 | failure              | 以空格分隔的故障响应。`return code`,`{param type}`,`data type`,`comment`                                |
+| response             | 与success、failure作用相同                                                                               |
 | header               | 以空格分隔的头字段。 `return code`,`{param type}`,`data type`,`comment`                                 |
 | router               | 以空格分隔的路径定义。 `path`,`[httpMethod]`                                                            |
 | x-name               | 扩展字段必须以`x-`开头，并且只能使用json值。                                                            |
 
 ## Mime类型
 
-`swag` g接受所有格式正确的MIME类型, 即使匹配 `*/*`。除此之外，`swag`还接受某些MIME类型的别名，如下所示：
+`swag` 接受所有格式正确的MIME类型, 即使匹配 `*/*`。除此之外，`swag`还接受某些MIME类型的别名，如下所示：
 
 | Alias                 | MIME Type                         |
 | --------------------- | --------------------------------- |
@@ -434,7 +435,7 @@ Example [celler/controller](https://github.com/swaggo/swag/tree/master/example/c
 // @Param enumint query int false "int enums" Enums(1, 2, 3)
 // @Param enumnumber query number false "int enums" Enums(1.1, 1.2, 1.3)
 // @Param string query string false "string valid" minlength(5) maxlength(10)
-// @Param int query int false "int valid" mininum(1) maxinum(10)
+// @Param int query int false "int valid" minimum(1) maximum(10)
 // @Param default query string false "string default" default(A)
 // @Param collection query []string false "string collection" collectionFormat(multi)
 ```
@@ -536,8 +537,11 @@ type Order struct { //in `proto` package
 
 ```go
 // @Success 200 {string} string	"ok"
+// @failure 400 {string} string	"error"
+// @response default {string} string	"other error"
 // @Header 200 {string} Location "/entity/1"
-// @Header 200 {string} Token "qwerty"
+// @Header 200,400,default {string} Token "token"
+// @Header all {string} Token2 "token2"
 ```
 
 ### 使用多路径参数
