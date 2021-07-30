@@ -20,7 +20,6 @@ bin/
 out/
 
 ### Go Patch ###
-/vendor/
 /Godeps/
 
 ## Editor

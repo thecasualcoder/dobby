@@ -7,8 +7,12 @@ APP=dobby
 VERSION?=1.0
 APP_EXECUTABLE="./out/$(APP)"
 SRC_PACKAGES=$(shell go list ./... | grep -v "vendor")
-
 SHELL=/bin/bash -o pipefail
+
+ifeq ($(GOMETA_LINT),)
+	GOMETA_LINT=$(shell command -v $(PWD)/bin/golangci-lint 2> /dev/null)
+endif
+
 BUILD?=$(shell git describe --always --dirty 2> /dev/null)
 ifeq ($(BUILD),)
 	BUILD=dev
@@ -19,6 +23,13 @@ ifeq ($(RICHGO),)
 	GO_BINARY=go
 else
 	GO_BINARY=richgo
+endif
+
+GO_TEST=$(shell command -v gotestsum 2> /dev/null)
+ifeq ($(GO_TEST),)
+	GO_TEST=$(GO_BINARY) test -mod=vendor $(SRC_PACKAGES) -coverprofile ./out/coverage -short -v
+else
+	GO_TEST=gotestsum --packages ${SRC_PACKAGES}
 endif
 
 GOLANGCI_LINT=$(shell command -v golangci-lint 2> /dev/null)
@@ -71,7 +82,7 @@ compile: ensure-build-dir ensure-vendor## Compile dobby
 run: compile ## Run dobby
 	./out/dobby server
 
-compile-linux: ensure-build-dir ensure-vendor ## Compile dobby for linux
+compile-linux: ensure-build-dir ## Compile dobby for linux
 	GOOS=linux GOARCH=amd64 $(GO_BINARY) build -ldflags "-X main.majorVersion=$(VERSION) -X main.minorVersion=${BUILD}" -o $(APP_EXECUTABLE) ./main.go
 
 build: build-deps fmt lint test compile ## Build the application
@@ -85,8 +96,8 @@ fmt:
 lint: setup-golangci-lint
 	$(GOLANGCI_LINT) run -v
 
-test: ensure-build-dir ensure-vendor ## Run tests
-	ENVIRONMENT=test $(GO_BINARY) test $(SRC_PACKAGES) -p=1 -coverprofile ./out/coverage -short -v | grep -viE "start|no test files"
+test: ensure-build-dir ## Run tests
+	ENVIRONMENT=test $(GO_TEST)
 
 test-cover-html: ## Run tests with coverage
 	mkdir -p ./out
