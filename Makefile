@@ -8,10 +8,9 @@ APP_EXECUTABLE="./out/$(APP)"
 SRC_PACKAGES=$(shell go list ./... | grep -v "vendor")
 SHELL=/bin/bash -o pipefail
 GOPATH=$(shell go env GOPATH)
+GOLANGCI_LINT_VERSION=v1.59.1
+GOLANGCI_LINT=$(shell command -v golangci-lint 2> /dev/null)
 
-ifeq ($(GOMETA_LINT),)
-	GOMETA_LINT=$(shell command -v $(PWD)/bin/golangci-lint 2> /dev/null)
-endif
 
 BUILD?=$(shell git describe --always --dirty 2> /dev/null)
 ifeq ($(BUILD),)
@@ -30,12 +29,6 @@ ifeq ($(GO_TEST),)
 	GO_TEST=$(GO_BINARY) test -mod=vendor $(SRC_PACKAGES) -coverprofile ./out/coverage -short -v
 else
 	GO_TEST=gotestsum --packages ${SRC_PACKAGES}
-endif
-
-GOLANGCI_LINT=$(shell command -v golangci-lint 2> /dev/null)
-GOLANGCI_LINT_VERSION=v1.59.1
-ifeq ($(GOLANGCI_LINT),)
-	GOLANGCI_LINT=$(shell command -v $(PWD)/bin/golangci-lint 2> /dev/null)
 endif
 
 ifdef CI_COMMIT_SHORT_SHA
