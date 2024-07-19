@@ -3,15 +3,16 @@ package handler_test
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/gin-gonic/gin"
-	"github.com/golang/mock/gomock"
-	"github.com/stretchr/testify/assert"
-	h "github.com/thecasualcoder/dobby/pkg/handler"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
+
+	"github.com/gin-gonic/gin"
+	"github.com/golang/mock/gomock"
+	"github.com/stretchr/testify/assert"
+	h "github.com/thecasualcoder/dobby/pkg/handler"
 )
 
 func TestDefaultContext_SendResponse(t *testing.T) {
@@ -23,7 +24,7 @@ func TestDefaultContext_SendResponse(t *testing.T) {
 		recorder := httptest.NewRecorder()
 		ginContext, _ := gin.CreateTestContext(recorder)
 		context := h.NewDefaultContext(ginContext)
-		httpResponse := &http.Response{StatusCode: 200, Body: ioutil.NopCloser(strings.NewReader(""))}
+		httpResponse := &http.Response{StatusCode: 200, Body: io.NopCloser(strings.NewReader(""))}
 
 		context.SendResponse(httpResponse, url)
 
@@ -38,7 +39,7 @@ func TestDefaultContext_SendResponse(t *testing.T) {
 			recorder := httptest.NewRecorder()
 			ginContext, _ := gin.CreateTestContext(recorder)
 			context := h.NewDefaultContext(ginContext)
-			httpResponse := &http.Response{StatusCode: 200, Body: ioutil.NopCloser(strings.NewReader(`{"version": 1}`))}
+			httpResponse := &http.Response{StatusCode: 200, Body: io.NopCloser(strings.NewReader(`{"version": 1}`))}
 
 			context.SendResponse(httpResponse, url)
 
@@ -55,7 +56,7 @@ func TestDefaultContext_SendResponse(t *testing.T) {
 			recorder := httptest.NewRecorder()
 			ginContext, _ := gin.CreateTestContext(recorder)
 			context := h.NewDefaultContext(ginContext)
-			httpResponse := &http.Response{StatusCode: 200, Body: ioutil.NopCloser(strings.NewReader(`[{"version": 1}]`))}
+			httpResponse := &http.Response{StatusCode: 200, Body: io.NopCloser(strings.NewReader(`[{"version": 1}]`))}
 
 			context.SendResponse(httpResponse, url)
 
@@ -73,7 +74,7 @@ func TestDefaultContext_SendResponse(t *testing.T) {
 				recorder := httptest.NewRecorder()
 				ginContext, _ := gin.CreateTestContext(recorder)
 				context := h.NewDefaultContext(ginContext)
-				httpResponse := &http.Response{StatusCode: 200, Body: ioutil.NopCloser(strings.NewReader(expectedResponse))}
+				httpResponse := &http.Response{StatusCode: 200, Body: io.NopCloser(strings.NewReader(expectedResponse))}
 
 				context.SendResponse(httpResponse, url)
 
@@ -92,7 +93,7 @@ func TestDefaultContext_SendResponse(t *testing.T) {
 		recorder := httptest.NewRecorder()
 		ginContext, _ := gin.CreateTestContext(recorder)
 		context := h.NewDefaultContext(ginContext)
-		httpResponse := &http.Response{StatusCode: 200, Body: ioutil.NopCloser(strings.NewReader(`{"url": "http://localhost:4444/notvalid"`))}
+		httpResponse := &http.Response{StatusCode: 200, Body: io.NopCloser(strings.NewReader(`{"url": "http://localhost:4444/notvalid"`))}
 
 		context.SendResponse(httpResponse, url)
 

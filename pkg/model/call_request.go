@@ -1,6 +1,6 @@
 package model
 
-//CallRequest godoc
+// CallRequest godoc
 type CallRequest struct {
 	URL    string      `json:"url"`
 	Method string      `json:"method"`

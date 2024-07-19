@@ -2,15 +2,16 @@ package handler_test
 
 import (
 	"fmt"
+	"io"
+	"net/http"
+	"strings"
+	"testing"
+
 	"github.com/gin-gonic/gin"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 	mock "github.com/thecasualcoder/dobby/internal/mock/handler"
 	h "github.com/thecasualcoder/dobby/pkg/handler"
-	"io/ioutil"
-	"net/http"
-	"strings"
-	"testing"
 )
 
 func TestHandler_Call(t *testing.T) {
@@ -26,8 +27,8 @@ func TestHandler_Call(t *testing.T) {
   "url": "http://localhost:4444/version",
   "method": "GET"
 }`)
-		expectedResponse := &http.Response{StatusCode: 200, Body: ioutil.NopCloser(strings.NewReader(`{"version": 1}`))}
-		mockContext.EXPECT().GetRequestBody().Return(ioutil.NopCloser(stringReader))
+		expectedResponse := &http.Response{StatusCode: 200, Body: io.NopCloser(strings.NewReader(`{"version": 1}`))}
+		mockContext.EXPECT().GetRequestBody().Return(io.NopCloser(stringReader))
 		httpClient.EXPECT().Do(gomock.Any()).Return(expectedResponse, nil)
 		mockContext.EXPECT().SendResponse(expectedResponse, "http://localhost:4444/version")
 
@@ -44,7 +45,7 @@ func TestHandler_Call(t *testing.T) {
 		stringReader := strings.NewReader(`
 {
   "url": "http://localhost:4444/notvalid"`)
-		mockContext.EXPECT().GetRequestBody().Return(ioutil.NopCloser(stringReader))
+		mockContext.EXPECT().GetRequestBody().Return(io.NopCloser(stringReader))
 		mockContext.EXPECT().JSON(400, gomock.Any()).Do(func(_ int, data interface{}) {
 			assert.Equal(t, "error when decoding request: unexpected EOF", data.(gin.H)["error"])
 		})
@@ -63,7 +64,7 @@ func TestHandler_Call(t *testing.T) {
 {
   "url": "http://localhost:4444/version"
 }`)
-		mockContext.EXPECT().GetRequestBody().Return(ioutil.NopCloser(stringReader))
+		mockContext.EXPECT().GetRequestBody().Return(io.NopCloser(stringReader))
 		httpClient.EXPECT().Do(gomock.Any()).Return(nil, fmt.Errorf("error making request"))
 		mockContext.EXPECT().JSON(400, gomock.Any()).Do(func(_ int, data interface{}) {
 			assert.Equal(t, "error when making request to http://localhost:4444/version: error making request", data.(gin.H)["error"])

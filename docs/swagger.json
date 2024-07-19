@@ -47,7 +47,8 @@
                 "tags": [
                     "Control"
                 ],
-                "summary": "Suicide"
+                "summary": "Suicide",
+                "responses": {}
             }
         },
         "/control/goturbo/cpu": {
@@ -466,9 +467,7 @@
         "model.CallRequest": {
             "type": "object",
             "properties": {
-                "body": {
-                    "type": "object"
-                },
+                "body": {},
                 "method": {
                     "type": "string"
                 },

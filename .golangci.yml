@@ -5,5 +5,11 @@ linters:
   enable:
     - revive
     - gofmt
+linters-settings:
+  revive:
+    # severity: warning
+    rules:
+      - name: package-comments
+        disabled: true
 issues:
   exclude-use-default: false

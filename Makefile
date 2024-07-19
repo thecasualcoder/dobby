@@ -2,12 +2,12 @@
 help: ## Prints help (only for targets with comments)
 	@grep -E '^[a-zA-Z._-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
 
-GO111MODULE=on
 APP=dobby
 VERSION?=1.0
 APP_EXECUTABLE="./out/$(APP)"
 SRC_PACKAGES=$(shell go list ./... | grep -v "vendor")
 SHELL=/bin/bash -o pipefail
+GOPATH=$(shell go env GOPATH)
 
 ifeq ($(GOMETA_LINT),)
 	GOMETA_LINT=$(shell command -v $(PWD)/bin/golangci-lint 2> /dev/null)
@@ -33,7 +33,7 @@ else
 endif
 
 GOLANGCI_LINT=$(shell command -v golangci-lint 2> /dev/null)
-GOLANGCI_LINT_VERSION=v1.41.1
+GOLANGCI_LINT_VERSION=v1.59.1
 ifeq ($(GOLANGCI_LINT),)
 	GOLANGCI_LINT=$(shell command -v $(PWD)/bin/golangci-lint 2> /dev/null)
 endif
@@ -44,18 +44,18 @@ endif
 
 setup-richgo:
 ifeq ($(RICHGO),)
-	GO111MODULE=off $(GO_BINARY) get -u github.com/kyoh86/richgo
+	$(GO_BINARY) get -u github.com/kyoh86/richgo
 endif
 
 setup-golangci-lint:
 ifeq ($(GOLANGCI_LINT),)
-	curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s $(GOLANGCI_LINT_VERSION)
+	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(GOPATH)/bin $(GOLANGCI_LINT_VERSION)
 endif
 
 SWAG=$(shell command -v swag 2> /dev/null)
 setup-swag:
 ifeq ($(SWAG),)
-	GO111MODULE=off $(GO_BINARY) get -u github.com/swaggo/swag/cmd/swag
+	$(GO_BINARY) install github.com/swaggo/swag/cmd/swag@latest
 endif
 
 setup: setup-golangci-lint setup-swag ensure-build-dir ## Setup environment

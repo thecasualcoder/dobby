@@ -2,15 +2,16 @@ package handler
 
 import (
 	"fmt"
-	"github.com/gin-gonic/gin"
-	"github.com/golang/mock/gomock"
-	"github.com/stretchr/testify/assert"
-	mock "github.com/thecasualcoder/dobby/internal/mock/handler"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/url"
 	"strings"
 	"testing"
+
+	"github.com/gin-gonic/gin"
+	"github.com/golang/mock/gomock"
+	"github.com/stretchr/testify/assert"
+	mock "github.com/thecasualcoder/dobby/internal/mock/handler"
 )
 
 func TestHandler_AddProxy(t *testing.T) {
@@ -28,7 +29,7 @@ func TestHandler_AddProxy(t *testing.T) {
    "method": "GET"
  }
 }`)
-		mockContext.EXPECT().GetRequestBody().Return(ioutil.NopCloser(stringReader))
+		mockContext.EXPECT().GetRequestBody().Return(io.NopCloser(stringReader))
 		mockContext.EXPECT().Status(201)
 
 		handler.AddProxy(mockContext)
@@ -59,7 +60,7 @@ func TestHandler_AddProxy(t *testing.T) {
  "method": "GET"
 }`)
 
-		mockContext.EXPECT().GetRequestBody().Return(ioutil.NopCloser(stringReader))
+		mockContext.EXPECT().GetRequestBody().Return(io.NopCloser(stringReader))
 		mockContext.EXPECT().JSON(400, gomock.Any()).Do(func(_ int, data interface{}) {
 			assert.EqualValues(t, "proxy configuration for url: /v1/version and method: GET is already added", data.(gin.H)["error"])
 		})
@@ -82,7 +83,7 @@ func TestHandler_ProxyRoute(t *testing.T) {
 		mockContext := mock.NewMockContext(ctrl)
 		client := mock.NewMockhttpClient(ctrl)
 		expectedURL := "/version"
-		expectedResponse := &http.Response{StatusCode: 200, Body: ioutil.NopCloser(strings.NewReader(""))}
+		expectedResponse := &http.Response{StatusCode: 200, Body: io.NopCloser(strings.NewReader(""))}
 		handler := New(true, true, client)
 		handler.proxyRequests = proxyRequests{{
 			Path:   "/v1/version",
@@ -177,7 +178,7 @@ func TestHandler_DeleteProxy(t *testing.T) {
  "path": "/v1/version",
  "method": "GET"
 }`)
-		mockContext.EXPECT().GetRequestBody().Return(ioutil.NopCloser(stringReader))
+		mockContext.EXPECT().GetRequestBody().Return(io.NopCloser(stringReader))
 		mockContext.EXPECT().JSON(200, gomock.Any()).Do(func(_ int, data interface{}) {
 			assert.EqualValues(t, "deleted the proxy config successfully", data.(gin.H)["result"])
 		})
@@ -201,7 +202,7 @@ func TestHandler_DeleteProxy(t *testing.T) {
  "path": "/v2/version",
  "method": "GET"
 }`)
-		mockContext.EXPECT().GetRequestBody().Return(ioutil.NopCloser(stringReader))
+		mockContext.EXPECT().GetRequestBody().Return(io.NopCloser(stringReader))
 		mockContext.EXPECT().JSON(404, gomock.Any()).Do(func(_ int, data interface{}) {
 			assert.EqualValues(t, "proxy config with url /v2/version and GET method is not found", data.(gin.H)["error"])
 		})

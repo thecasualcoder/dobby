@@ -3,12 +3,12 @@ package handler
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/gin-gonic/gin"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"net/url"
 	"strings"
+
+	"github.com/gin-gonic/gin"
 )
 
 // Handler is provides HandlerFunc for Gin Context
@@ -74,7 +74,7 @@ func (c defaultContext) GetRequestBody() io.ReadCloser {
 }
 
 func (c defaultContext) SendResponse(response *http.Response, url string) {
-	responseData, err := ioutil.ReadAll(response.Body)
+	responseData, err := io.ReadAll(response.Body)
 	if err != nil {
 		c.JSON(400, gin.H{"error": fmt.Sprintf("error when reading response from %s: %s", url, err.Error())})
 		return

@@ -17,8 +17,7 @@ definitions:
     type: object
   model.CallRequest:
     properties:
-      body:
-        type: object
+      body: {}
       method:
         type: string
       url:
@@ -94,6 +93,7 @@ paths:
       consumes:
       - application/json
       description: Make Dobby kill itself
+      responses: {}
       summary: Suicide
       tags:
       - Control
