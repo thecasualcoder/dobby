@@ -1,0 +1,15 @@
+meta {
+  name: Delayed HTTP Status
+  type: http
+  seq: 2
+}
+
+get {
+  url: http://localhost:4444/return/401?delay=300
+  body: none
+  auth: none
+}
+
+params:query {
+  delay: 300
+}

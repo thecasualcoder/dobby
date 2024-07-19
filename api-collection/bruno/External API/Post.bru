@@ -1,0 +1,15 @@
+meta {
+  name: Post
+  type: http
+  seq: 2
+}
+
+post {
+  url: http://localhost:4444/call
+  body: json
+  auth: none
+}
+
+body:json {
+  {"url": "http://httpbin.org/post", "method": "POST", "body": "{key: value}"}
+}

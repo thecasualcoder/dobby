@@ -1,0 +1,15 @@
+meta {
+  name: Recover Readiness
+  type: http
+  seq: 10
+}
+
+put {
+  url: http://localhost:4444/control/ready/sick?resetInSeconds=20
+  body: none
+  auth: none
+}
+
+params:query {
+  resetInSeconds: 20
+}

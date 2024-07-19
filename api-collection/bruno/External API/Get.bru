@@ -1,0 +1,18 @@
+meta {
+  name: Get
+  type: http
+  seq: 1
+}
+
+post {
+  url: http://localhost:4444/call
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "url": "http://httpbin.org/get",
+    "method": "GET"
+  }
+}

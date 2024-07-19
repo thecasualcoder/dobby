@@ -1,0 +1,15 @@
+meta {
+  name: Recover Health
+  type: http
+  seq: 7
+}
+
+put {
+  url: http://localhost:4444/control/health/sick?resetInSeconds=20
+  body: none
+  auth: none
+}
+
+params:query {
+  resetInSeconds: 20
+}

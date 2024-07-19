@@ -1,0 +1,22 @@
+meta {
+  name: Create Proxy
+  type: http
+  seq: 1
+}
+
+post {
+  url: http://localhost:4444/proxy
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "path": "/time",
+    "method": "GET",
+    "proxy": {
+      "url": "http://worldtimeapi.org/api/timezone/asia/kolkata",
+      "method": "GET"
+    }
+  }
+}
