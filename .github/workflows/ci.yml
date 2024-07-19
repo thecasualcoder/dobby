@@ -10,6 +10,8 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version: 1.22
+          with:
+            cache: false
       - name: Checkout code
         uses: actions/checkout@v4
       - name: Lint
@@ -25,6 +27,8 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version: 1.22
+          with:
+            cache: false
       - name: Checkout code
         uses: actions/checkout@v4
       - name: Unit Tests
